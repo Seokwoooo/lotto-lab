@@ -6,7 +6,6 @@ const format = new Intl.NumberFormat('ko-KR');
 const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
 const state = { worker: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null };
-const names = ['오늘은 예열 중', '이걸 여기서?!', '한 끗의 전설', '꽤 강한 운', '소소한 행운 수집가', '작은 행운 발견'];
 const text = (id, value) => { $(id).textContent = value; };
 
 function freshSeed() {
@@ -34,10 +33,11 @@ function updateSettings() {
   text('mode-hint', mode === 'auto' ? '자동으로 매번 새로운 번호를 구매합니다.' : '아래에서 6개 번호를 골라 고정하세요.');
   text('slip-mode', mode === 'auto' ? '자동 미리보기' : '수동 · 고정 번호');
   $('number-grid').classList.toggle('auto-preview', mode === 'auto');
-  text('start-label', rounds === 1 ? '당첨번호 추첨하기' : `${format.format(rounds)}회 연속 추첨`);
-  document.querySelector('.mobile-start').textContent = rounds === 1 ? '이 복권으로 1회 추첨' : `${format.format(rounds)}회 연속 추첨`;
+  text('start-label', rounds === 1 ? `이 ${tickets}게임 추첨하기` : `${format.format(rounds)}회 연속 추첨`);
+  text('settings-summary', `${mode === 'auto' ? '자동' : '수동'} · ${tickets}게임 · ${format.format(rounds)}회`);
+  $('number-picker').hidden = mode === 'auto';
   $('single-draw').hidden = rounds === 1;
-  text('draw-action-note', rounds === 1 ? `한 번 클릭 = 추첨 1회 · ${tickets}게임 모두 대조` : `회차마다 당첨번호를 새로 뽑고 ${tickets}게임씩 구매합니다.`);
+  text('draw-action-note', rounds === 1 ? '당첨번호 6개 + 보너스 1개를 뽑아 대조합니다.' : `회차마다 당첨번호를 새로 뽑고 ${tickets}게임씩 구매합니다.`);
   if (!state.result) {
     headline(`내 복권 ${tickets}게임,`, '당첨될까?');
     text('result-description', rounds === 1 ? '구매 영수증의 번호에 당첨번호 한 세트를 대조합니다.' : `${format.format(rounds)}회 연속 추첨 · 회차마다 ${tickets}게임 · ${mode === 'auto' ? '매번 자동' : '같은 번호로'}`);
@@ -66,7 +66,7 @@ function preparePurchase() {
   } catch {
     state.purchase = null;
     $('ticket-list').replaceChildren();
-    text('purchase-status', '설정 확인');
+    text('purchase-status', '설정 확인'); $('purchase-caption').hidden = false;
     text('purchase-caption', currentMode() === 'fixed' ? '서로 다른 번호 6개를 마킹하면 복권을 발행합니다.' : '횟수와 게임 수를 확인해주세요.');
     text('ticket-count', '—'); text('ticket-cost', '—');
   }
@@ -74,18 +74,15 @@ function preparePurchase() {
 
 function resetExperiment() {
   state.purchase = null;
-  if (state.result) {
-    state.result = null;
-    for (const id of ['stat-games', 'stat-cost', 'stat-prize', 'stat-balance']) metric(id, 0, id === 'stat-games' ? '게임' : '원');
-    for (let rank = 0; rank <= 5; rank++) {
-      text(`rank-${rank}`, '0'); document.querySelector(`[data-rank="${rank}"]`)?.classList.remove('has-win');
-    }
-    $('stat-balance').classList.remove('negative', 'positive');
-    text('best-rank', '아직 추첨 전'); text('receipt-title', '당신의 운은?');
-    text('receipt-badge', '아직 열어보지 않은 운'); text('receipt-message', '추첨을 마치면 당신만의 한 줄이 생겨요.');
-    for (const id of ['receipt-rank', 'receipt-wins', 'receipt-return']) text(id, '—');
+  state.result = null;
+  for (const id of ['stat-games', 'stat-cost', 'stat-prize', 'stat-balance']) metric(id, 0, id === 'stat-games' ? '게임' : '원');
+  for (let rank = 0; rank <= 5; rank++) {
+    text(`rank-${rank}`, '0'); document.querySelector(`[data-rank="${rank}"]`)?.classList.remove('has-win');
   }
-  $('share-result').disabled = true; $('save-receipt').disabled = true;
+  $('stat-balance').classList.remove('negative', 'positive');
+  text('best-rank', '아직 추첨 전');
+  $('result-share').disabled = true; $('result-save').disabled = true;
+  $('draw-stage').classList.remove('has-draw');
   text('draw-status', '추첨 준비 완료'); text('result-kicker', '내 번호를 먼저 확인해보세요.');
   text('draw-caption', '당첨번호 · 추첨 전'); text('progress-text', '구매 영수증 발행 완료 · 추첨 대기');
   text('progress-percent', '0%'); $('progress').value = 0;
@@ -149,7 +146,11 @@ document.querySelectorAll('[data-rounds], [data-tickets]').forEach(button => but
 }));
 document.querySelectorAll('#rounds, #tickets, input[name="mode"]').forEach(input => input.addEventListener('input', changePurchase));
 $('own-challenge').addEventListener('click', () => { changePurchase(); toast('같은 설정, 새로운 운으로 시작합니다.'); });
-$('new-purchase').addEventListener('click', () => { changePurchase(); if (state.purchase) toast('새 구매 영수증을 발행했어요. 이 번호로 추첨합니다.'); });
+$('new-purchase').addEventListener('click', () => {
+  document.querySelector('input[name="mode"][value="auto"]').checked = true;
+  changePurchase();
+  if (state.purchase) toast(`${state.purchase.config.tickets}게임의 자동 번호를 새로 뽑았어요.`);
+});
 $('experiment-form').addEventListener('submit', event => { event.preventDefault(); start(); });
 $('single-draw').addEventListener('click', () => start(1));
 $('stop-button').addEventListener('click', () => {
@@ -164,7 +165,7 @@ function start(overrideRounds) {
   let config;
   try {
     config = currentConfig(overrideRounds ?? Number($('rounds').value));
-  } catch (error) { $('form-error').hidden = false; text('form-error', error.message); toast(error.message); return; }
+  } catch (error) { $('settings-panel').open = true; $('form-error').hidden = false; text('form-error', error.message); toast(error.message); return; }
   if (!('Worker' in window)) { toast('이 브라우저에서는 실험을 실행할 수 없어요. 최신 브라우저에서 다시 열어주세요.'); return; }
   discardReplay();
   state.result = null;
@@ -174,10 +175,9 @@ function start(overrideRounds) {
   }
   $('settings').disabled = true; $('stop-button').hidden = false; $('stop-button').disabled = false;
   $('start-button').disabled = true; $('single-draw').disabled = true;
-  document.querySelector('.mobile-start').disabled = true;
   $('new-purchase').disabled = true;
   text('stop-button', '여기서 멈추기');
-  $('share-result').disabled = true; $('save-receipt').disabled = true;
+  $('result-share').disabled = true; $('result-save').disabled = true;
   $('draw-stage').classList.add('is-running');
   text('draw-status', '추첨 중'); text('result-kicker', '운을 꺼내보는 중');
   headline('이번에는', '어떤 결과가?');
@@ -206,10 +206,9 @@ function finish() {
   state.worker?.terminate(); state.worker = null;
   $('settings').disabled = false; $('stop-button').hidden = true;
   $('start-button').disabled = false; $('single-draw').disabled = false;
-  document.querySelector('.mobile-start').disabled = false;
   $('new-purchase').disabled = false;
   $('draw-stage').classList.remove('is-running');
-  $('share-result').disabled = !state.result?.games; $('save-receipt').disabled = !state.result?.games;
+  $('result-share').disabled = !state.result?.games; $('result-save').disabled = !state.result?.games;
   state.purchase = null;
   if (state.result) {
     text('start-label', Number($('rounds').value) === 1 ? '새 추첨으로 한 번 더' : `${format.format(Number($('rounds').value))}회 다시 추첨`);
@@ -246,23 +245,18 @@ function render(result, finished, stopped) {
   $('progress').value = percent;
   text('draw-caption', config.rounds === 1 ? '이번 추첨의 당첨번호' : `마지막 당첨번호 · ${format.format(rounds)}회차`);
   if (last) renderBalls(last, finished);
-  text('receipt-badge', names[rank]);
-  text('receipt-rank', rank ? `${rank}등` : '당첨 없음');
-  text('receipt-wins', `${format.format(wins)} / ${format.format(games)}게임`);
-  text('receipt-return', `${decimal.format(games ? (prize / (games * 1000)) * 100 : 0)}%`);
-  text('receipt-message', games ? `${format.format(games)}게임 샀는데, ${rank ? `최고 ${rank}등.` : '당첨은 없었어요.'}` : '아직 추첨 전입니다.');
   if (finished) {
     text('draw-status', stopped ? '추첨 중단' : rank === 1 ? '1등 당첨!' : '추첨 완료');
     text('result-kicker', stopped ? '지금까지 완료한 추첨만 계산했어요.' : '이번 실험의 결과는…');
     headline(`${format.format(games)}게임 중,`, rank ? `최고 ${rank}등!` : '당첨 없음.');
     text('result-description', rank === 1 ? '1등을 여기서 만났네요! 다음 실험의 결과는 또 달라질 수 있어요.' : rank === 0 ? '번호 3개 맞히기도 쉽지 않죠. 실제로는 돈을 쓰지 않았어요.' : `당첨 ${format.format(wins)}게임. ${prize < games * 1000 ? '지갑을 열지 않아서 다행이에요.' : '이번 가상 실험에서는 구매 비용을 회수했어요.'}`);
     renderTickets(last, config);
-    $('receipt-title').textContent = '내 운 영수증';
   }
 }
 
 function ballColor(n) { return n <= 10 ? '' : n <= 20 ? 'blue' : n <= 30 ? 'red' : n <= 40 ? 'gray' : 'green'; }
 function renderBalls(last, animate) {
+  $('draw-stage').classList.add('has-draw');
   const fragment = document.createDocumentFragment();
   [...last.winning, last.bonus].forEach((number, i) => {
     if (i === 6) { const plus = document.createElement('span'); plus.className = 'bonus-plus'; plus.textContent = '+'; plus.setAttribute('aria-hidden', 'true'); fragment.append(plus); }
@@ -292,18 +286,17 @@ function renderTickets(last, config, checked = true) {
       else if (checked && n === last.bonus) { el.className = 'bonus-match'; el.setAttribute('aria-label', `${n}번 보너스 일치`); }
       numbers.append(el);
     });
-    const rank = document.createElement('strong'); rank.textContent = checked ? ticket.rank ? `${ticket.rank}등` : '낙첨' : '대기';
+    const rank = document.createElement('strong'); rank.textContent = checked ? ticket.rank ? `${ticket.rank}등` : '낙첨' : config.mode === 'auto' ? '자동' : '수동';
     if (checked && ticket.rank) rank.className = 'won';
     row.append(index, numbers, rank); fragment.append(row);
   });
-  if (last.omitted) { const note = document.createElement('p'); note.className = 'field-note'; note.textContent = `처음 10장만 표시합니다. 나머지 ${last.omitted}장도 결과에 모두 반영했어요.`; fragment.append(note); }
   $('ticket-list').replaceChildren(fragment);
   text('ticket-count', `${config.tickets}게임`);
   text('ticket-cost', currency(config.tickets * 1000));
   text('purchase-status', checked ? '당첨 확인 완료' : '추첨 대기');
-  text('purchase-caption', checked ? `이 영수증은 ${format.format(last.round)}회차의 구매 번호입니다.${config.rounds > 1 ? ' 누적 결과는 성적표에서 확인하세요.' : ''}` : config.rounds === 1 ? '이 번호로 1회 추첨합니다. 결과는 각 줄에 표시됩니다.' : `첫 회차의 구매 번호입니다. ${config.mode === 'auto' ? '회차마다 새 자동 번호로 구매합니다.' : '같은 구매 번호로 당첨번호만 새로 뽑습니다.'}`);
+  $('purchase-caption').hidden = config.rounds === 1;
+  text('purchase-caption', checked ? `이 영수증은 ${format.format(last.round)}회차의 구매 번호입니다.${config.rounds > 1 ? ' 누적 결과는 성적표에서 확인하세요.' : ''}` : config.rounds === 1 ? `아래 ${config.tickets}게임으로 한 번 추첨합니다.` : `첫 회차의 구매 번호입니다. ${config.mode === 'auto' ? '회차마다 새 자동 번호로 구매합니다.' : '같은 구매 번호로 당첨번호만 새로 뽑습니다.'}`);
   $('purchase-ticket').classList.toggle('is-checked', checked);
-  $('new-purchase').textContent = config.mode === 'auto' ? '새 자동 번호로 구매' : '같은 번호로 새 복권';
 }
 
 function showResultScreen(push = true) {
@@ -313,11 +306,14 @@ function showResultScreen(push = true) {
   text('type-rank', profile.rank ? `${profile.rank}등` : '당첨 없음');
   text('type-games', `${format.format(result.games)}게임`); text('type-rounds', `${format.format(result.rounds)}회`);
   text('type-prize', currency(result.prize));
+  text('result-cost', currency(result.games * 1000)); text('result-prize', currency(result.prize));
   text('type-explanation', profile.description);
-  text('type-facts', `${format.format(result.games)}게임 중 ${format.format(profile.wins)}게임 당첨. 가상 구매 비용 ${currency(result.games * 1000)}, 예시 당첨금 ${currency(result.prize)}으로 가상 손익은 ${currency(profile.balance)}입니다.`);
+  text('type-facts', `${format.format(result.games)}게임 중 ${format.format(profile.wins)}게임 당첨. 가상 손익 ${currency(profile.balance)}.`);
   text('type-friend', profile.friend);
-  text('type-draw-label', result.rounds === 1 ? '이번 당첨번호 · 마지막 공은 보너스' : '마지막 회차 당첨번호 · 마지막 공은 보너스');
+  text('result-again', result.config.mode === 'auto' ? '새 번호로 다시 해보기' : '같은 번호로 다시 추첨');
+  text('type-draw-label', result.rounds === 1 ? '당첨번호 · 마지막 공은 보너스' : `마지막 ${format.format(result.rounds)}회차 당첨번호 · 보너스`);
   text('result-detail-caption', result.rounds === 1 ? `${result.config.tickets}게임의 구매 번호와 당첨 결과입니다.` : `전체 ${format.format(result.rounds)}회 중 마지막 회차의 ${result.config.tickets}게임입니다. 위의 등수와 당첨금은 전체 회차를 합한 결과입니다.`);
+  $('result-detail-caption').hidden = result.rounds === 1;
   $('type-card').style.setProperty('--type-paper', profile.color);
   $('result-balls').replaceChildren(...Array.from($('winning-balls').children, child => {
     const copy = child.cloneNode(true); copy.classList.remove('revealed'); return copy;
@@ -328,7 +324,8 @@ function showResultScreen(push = true) {
   document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
   if (push && location.href !== shareUrl(result)) history.pushState({ view: 'result' }, '', shareUrl(result));
   window.scrollTo({ top: 0, behavior: 'instant' });
-  $('type-card').focus({ preventScroll: true });
+  $('result-page-title').setAttribute('tabindex', '-1');
+  $('result-page-title').focus({ preventScroll: true });
 }
 
 function showSimulator(fresh = false) {
@@ -341,8 +338,6 @@ function showSimulator(fresh = false) {
 }
 
 $('result-again').addEventListener('click', () => showSimulator(true));
-$('result-share').addEventListener('click', () => $('share-result').click());
-$('result-save').addEventListener('click', () => $('save-receipt').click());
 window.addEventListener('popstate', () => {
   if (location.hash !== '#result') { showSimulator(); return; }
   const params = new URLSearchParams(location.search);
@@ -363,7 +358,7 @@ function shareText(result) {
   return `내 로또 유형은 「${profile.title.replaceAll('\n', ' ')}」 ${profile.code}\n“${profile.line}”\n${format.format(result.games)}게임 · ${profile.rank ? `최고 ${profile.rank}등` : '당첨 없음'}. 실제로 쓴 돈은 0원. 너는 어떤 유형? #로또랩`;
 }
 
-$('share-result').addEventListener('click', async () => {
+$('result-share').addEventListener('click', async () => {
   if (!state.result) return;
   const payload = { title: '내 로또 유형 · 로또랩', text: shareText(state.result), url: shareUrl(state.result) };
   if (navigator.share) {
@@ -384,9 +379,9 @@ function showCopyDialog(value) {
   dialog.addEventListener('close', () => dialog.remove()); dialog.showModal(); input.focus(); input.select();
 }
 
-$('save-receipt').addEventListener('click', async () => {
+$('result-save').addEventListener('click', async () => {
   if (!state.result) return;
-  const button = $('save-receipt'); button.disabled = true; $('result-save').disabled = true;
+  const button = $('result-save'); button.disabled = true;
   try {
     await document.fonts.ready;
     const result = state.result, profile = getProfile(result);
@@ -451,7 +446,7 @@ $('save-receipt').addEventListener('click', async () => {
     link.href = href; link.download = file.name; link.click(); setTimeout(() => URL.revokeObjectURL(href), 60_000);
     toast('내 로또 유형 카드를 저장했어요. 친구에게도 보여주세요!');
   } catch { toast('이미지를 저장하지 못했어요. 결과 공유 버튼으로 링크를 보낼 수 있어요.'); }
-  finally { button.disabled = false; $('result-save').disabled = false; }
+  finally { button.disabled = false; }
 });
 
 function restoreSharedExperiment() {
