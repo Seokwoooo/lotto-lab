@@ -88,3 +88,23 @@ test('multiple identical fixed tickets share a single draw outcome', () => {
   assert.equal(rb.prize, ra.prize * 10);
   assert.ok(rb.last.tickets.every(t => t.rank === rb.last.tickets[0].rank));
 });
+
+test('every purchased game appears in a one-draw receipt with a consistent verdict', () => {
+  for (const tickets of [1, 10, 100]) {
+    for (const mode of ['auto', 'fixed']) {
+      const experiment = createExperiment({ ...config, rounds: 1, tickets, mode, fixed: [1, 2, 3, 4, 5, 6] });
+      experiment.step(1);
+      const result = experiment.snapshot();
+      assert.equal(result.games, tickets);
+      assert.equal(result.last.tickets.length, tickets);
+      assert.equal(result.last.omitted, 0);
+      const visibleCounts = [0, 0, 0, 0, 0, 0];
+      for (const ticket of result.last.tickets) {
+        assert.equal(new Set(ticket.numbers).size, 6);
+        assert.equal(ticket.rank, classify(ticket.numbers, result.last.winning, result.last.bonus));
+        visibleCounts[ticket.rank]++;
+      }
+      assert.deepEqual(visibleCounts, result.counts);
+    }
+  }
+});

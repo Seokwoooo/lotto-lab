@@ -94,10 +94,8 @@ export function createExperiment(input) {
       const rank = rankFromMatches(matches, bonusMatch);
       counts[rank] += copies;
       prize += PRIZES[rank] * copies;
-      if (t < 10) {
-        const ticket = { numbers: [...numbers].sort((a, b) => a - b), rank, matches, bonusMatch };
-        for (let c = 0; c < Math.min(copies, 10); c++) visible.push(ticket);
-      }
+      const ticket = { numbers: [...numbers].sort((a, b) => a - b), rank, matches, bonusMatch };
+      for (let c = 0; c < copies; c++) visible.push(ticket);
       if (rank > 0 && (!best || rank < best.rank)) best = { round: rounds, ticket: t + 1, rank, numbers: [...numbers].sort((a, b) => a - b), winning, bonus };
     }
     last = { round: rounds, winning, bonus, tickets: visible, omitted: Math.max(0, config.tickets - visible.length) };
