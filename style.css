@@ -530,6 +530,7 @@ body.is-drawing{overflow:hidden}
 .type-eyebrow b{font:750 11px var(--mono);margin-left:6px;color:#677080}
 .result-screen .type-card h2{font-size:23px;line-height:1.25;letter-spacing:-.6px;margin:0 0 7px;color:var(--ink);white-space:normal}
 .result-screen .type-line{font-size:13px;line-height:1.6;min-height:0;color:#677080;font-weight:500}
+.result-screen .type-basis{font-size:11px;line-height:1.6;font-weight:650;color:#4b5268;margin-top:8px;padding-top:8px;border-top:1px solid #262c4018;word-break:keep-all;overflow-wrap:anywhere}
 .fortune-details{margin-top:9px;border-bottom:1px solid #e3dfd5;padding-inline:2px}
 .fortune-details summary{font-size:13px;color:#677080;padding:11px 0;min-height:42px}
 .fortune-details>p{font-size:14px;line-height:1.8;color:#677080;margin:0 0 13px;word-break:keep-all}

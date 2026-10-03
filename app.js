@@ -1,5 +1,5 @@
 import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=11';
-import { getProfile } from './profiles.js';
+import { getProfile, PROFILE_COUNT } from './profiles.js?v=13';
 import { readReceipt } from './receipts.js?v=9';
 import { nextBudgetStep } from './budget.js?v=9';
 import { playDrawReveal } from './draw-reveal.js?v=12';
@@ -571,6 +571,7 @@ function showResultScreen(push = true) {
   if (!state.result) return;
   const result = state.result, profile = getProfile(result);
   text('type-code', profile.code); text('type-title', profile.title); text('type-line', profile.line);
+  text('type-basis', profile.basis);
   $('type-character').className = `mascot mascot-${profile.character}`;
   $('type-character').setAttribute('aria-label', `${profile.title.replaceAll('\n', ' ')} 캐릭터`);
   text('result-page-title', state.showingFriend ? '친구가 뽑은 운, 이 정도였어요.' : `${budgetLabel(result.games)} 돌린 내 운은…`);
@@ -660,7 +661,7 @@ function shareUrl(result, challenge = false) {
 
 function shareText(result) {
   const profile = getProfile(result);
-  return `${budgetLabel(result.games)} 돌리고 ${currency(result.prize)} 건짐.\n내 운은 「${profile.title.replaceAll('\n', ' ')}」\n“${profile.line}”\n너 이거 이길 수 있어? 같은 금액으로 붙어보자. 실제 지출은 0원! #로또랩`;
+  return `${budgetLabel(result.games)} 돌리고 ${currency(result.prize)} 건짐.\n내 운은 「${profile.title.replaceAll('\n', ' ')}」\n“${profile.line}”\n${profile.basis}\n너 이거 이길 수 있어? 같은 금액으로 붙어보자. 실제 지출은 0원! #로또랩`;
 }
 
 $('result-share').addEventListener('click', async () => {
@@ -706,7 +707,7 @@ $('result-save').addEventListener('click', async () => {
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(56, 45, 267, 76, 12); ctx.fill();
     ctx.drawImage(logo, 74, 62, 232, 48);
     ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = '750 25px Pretendard, sans-serif'; ctx.fillText('나의 로또 운 캐릭터', 1018, 77);
-    ctx.font = '800 25px Manrope, sans-serif'; ctx.fillText(`${profile.code} · ${String(profile.number).padStart(2, '0')} / 16`, 1018, 111);
+    ctx.font = '800 25px Manrope, sans-serif'; ctx.fillText(`${profile.code} · ${String(profile.number).padStart(2, '0')} / ${PROFILE_COUNT}`, 1018, 111);
     const cells = { warm: [0, 0], office: [1, 0], clover: [2, 0], pink: [0, 1], royal: [1, 1] };
     const [column, row] = cells[profile.character];
     const cellWidth = sheet.naturalWidth / 3, cellHeight = sheet.naturalHeight / 2;
@@ -723,7 +724,7 @@ $('result-save').addEventListener('click', async () => {
     ctx.fillStyle = ink; fit(`${currency(result.prize)} 건짐`, 72, 898, 900); ctx.fillText(`${currency(result.prize)} 건짐`, 540, 1016);
     ctx.fillStyle = '#626779'; fit(profile.reaction, 29, 896, 650); ctx.fillText(profile.reaction, 540, 1072);
     ctx.fillStyle = ink;
-    const summary = `${format.format(result.games)}게임 · ${profile.rank ? `최고 ${profile.rank}등` : '당첨 없음'} · ${format.format(profile.wins)}게임 당첨`;
+    const summary = `${format.format(result.games)}게임 · ${profile.basis}`;
     fit(summary, 29, 960, 700); ctx.fillText(summary, 540, 1171);
     ctx.font = '800 29px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 540, 1230);
     ctx.fillStyle = '#626779'; ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('가상 추첨 · 1~3등은 세전 예시 금액 · 재미로 붙인 별명', 540, 1277);
