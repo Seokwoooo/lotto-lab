@@ -98,7 +98,7 @@ export function createExperiment(input, { onRound } = {}) {
       for (let c = 0; c < copies; c++) visible.push(ticket);
       if (rank > 0 && (!best || rank < best.rank)) best = { round: rounds, ticket: t + 1, rank, numbers: [...numbers].sort((a, b) => a - b), winning, bonus };
     }
-    last = { round: rounds, winning, bonus, tickets: visible, omitted: Math.max(0, config.tickets - visible.length) };
+    last = { round: rounds, winning, bonus, drawOrder: draw, tickets: visible, omitted: Math.max(0, config.tickets - visible.length) };
     onRound?.(last);
   }
 

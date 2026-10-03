@@ -19,8 +19,8 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
-  <link rel="stylesheet" href="./style.css?v=10">
-  <script type="module" src="./app.js?v=9"></script>
+  <link rel="stylesheet" href="./style.css?v=11">
+  <script type="module" src="./app.js?v=11"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -132,6 +132,24 @@
     </section>
   </main>
   <footer class="footer page-width"><img class="operator-logo" src="./assets/donghaeng-official.svg" alt="동행복권" width="161" height="38"><span><b>LOTTO LAB.</b> <span>동행복권과 관계없는 비공식 무료 시뮬레이터</span></span><div><a href="https://lucianlabs.dev/">lucianLabs</a><a href="https://github.com/Seokwoooo/lotto-simulation" target="_blank" rel="noopener noreferrer" id="footer-source">소스 코드 · MIT</a><a href="./source.zip" download>ZIP 다운로드</a></div></footer>
+  <dialog id="draw-theater" class="draw-theater" aria-labelledby="reveal-title" aria-describedby="reveal-subtitle">
+    <div class="reveal-heading"><img src="./assets/lotto-official.svg" alt="로또 6/45" width="230" height="48"><span class="reveal-live-label"><i aria-hidden="true"></i>내 운 추첨 중</span></div>
+    <h2 id="reveal-title" tabindex="-1">100만원치, 내 운은…</h2>
+    <p id="reveal-subtitle" class="reveal-subtitle">내 로또 1,000게임 · 한 번의 추첨</p>
+    <div class="reveal-machine" aria-hidden="true">
+      <div class="reveal-mix">
+        <span style="--x:-76px;--y:-56px;--dx:102px;--dy:118px;--delay:-.7s"></span><span class="blue" style="--x:65px;--y:-58px;--dx:-92px;--dy:85px;--delay:-1.2s"></span><span class="red" style="--x:-84px;--y:40px;--dx:116px;--dy:-113px;--delay:-2s"></span><span class="green" style="--x:74px;--y:48px;--dx:-122px;--dy:-84px;--delay:-.3s"></span><span class="gray" style="--x:-6px;--y:-91px;--dx:72px;--dy:146px;--delay:-1.7s"></span><span class="blue" style="--x:-28px;--y:89px;--dx:82px;--dy:-154px;--delay:-.9s"></span><span class="red" style="--x:89px;--y:-10px;--dx:-150px;--dy:57px;--delay:-.4s"></span><span style="--x:-96px;--y:-9px;--dx:149px;--dy:-43px;--delay:-1.5s"></span><span class="green" style="--x:10px;--y:72px;--dx:-64px;--dy:-145px;--delay:-2.4s"></span><span class="gray" style="--x:43px;--y:-79px;--dx:-106px;--dy:135px;--delay:-.1s"></span>
+      </div>
+      <div id="reveal-current" class="reveal-current"><span class="reveal-countdown">3</span></div>
+    </div>
+    <p id="reveal-caption" class="reveal-caption">제발, 이번엔…</p>
+    <div id="reveal-numbers" class="reveal-numbers" role="group" aria-label="공개된 당첨번호 6개와 보너스 번호">
+      <span class="reveal-slot" data-reveal-slot="0">·</span><span class="reveal-slot" data-reveal-slot="1">·</span><span class="reveal-slot" data-reveal-slot="2">·</span><span class="reveal-slot" data-reveal-slot="3">·</span><span class="reveal-slot" data-reveal-slot="4">·</span><span class="reveal-slot" data-reveal-slot="5">·</span><span class="reveal-slot reveal-bonus" data-reveal-slot="6">·</span>
+    </div>
+    <p id="reveal-calculation" class="reveal-calculation">실제 지출 0원 · 1,000게임</p>
+    <div class="reveal-controls"><button id="reveal-skip" type="button">결과 먼저 보기 →</button><button id="reveal-stop" type="button" hidden>추첨 중단</button></div>
+    <p id="reveal-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript><p class="noscript">시뮬레이션을 이용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>

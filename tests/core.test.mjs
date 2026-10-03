@@ -46,6 +46,18 @@ test('samples unique in-range numbers and replays the same seed', () => {
   }
 });
 
+test('the reveal preserves the original draw order without changing a version-one shared result', () => {
+  const experiment = createExperiment({ rounds: 1, tickets: 1000, mode: 'auto', seed: 'c4a7f448ae238a095f3f9286c6af3e4f', fixed: [] });
+  experiment.step(1);
+  const result = experiment.snapshot();
+  assert.deepEqual(result.last.drawOrder, [7, 36, 39, 3, 42, 38, 44]);
+  assert.deepEqual(result.last.winning, [3, 7, 36, 38, 39, 42]);
+  assert.equal(result.last.bonus, 44);
+  assert.deepEqual(result.counts, [981, 0, 0, 0, 3, 16]);
+  assert.equal(result.prize, 230000);
+  assert.equal(result.version, 1);
+});
+
 test('a finished experiment conserves games and computes rewards from real outcomes', () => {
   const experiment = createExperiment(config);
   experiment.step(1000);

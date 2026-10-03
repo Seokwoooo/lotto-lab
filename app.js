@@ -1,13 +1,14 @@
-import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=9';
+import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=11';
 import { getProfile } from './profiles.js';
 import { readReceipt } from './receipts.js?v=9';
 import { nextBudgetStep } from './budget.js?v=9';
+import { playDrawReveal } from './draw-reveal.js?v=11';
 
 const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('ko-KR');
 const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
-const state = { worker: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, receiptIndex: null, receiptFilter: 'all', receiptAnimation: null, showingFriend: false, challenge: null };
+const state = { worker: null, reveal: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, receiptIndex: null, receiptFilter: 'all', receiptAnimation: null, showingFriend: false, challenge: null };
 const text = (id, value) => { $(id).textContent = value; };
 const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games === 10000 ? '1천만원치' : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
 const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
@@ -195,14 +196,82 @@ $('new-purchase').addEventListener('click', () => {
 });
 $('experiment-form').addEventListener('submit', event => { event.preventDefault(); start(); });
 $('single-draw').addEventListener('click', () => start(1));
-$('stop-button').addEventListener('click', () => {
+function stopExperiment() {
   if (!state.worker) return;
+  state.reveal?.skip();
   state.worker.postMessage({ type: 'stop' });
   $('stop-button').disabled = true;
+  $('reveal-stop').disabled = true;
   text('stop-button', '마지막 추첨 정리 중…');
-});
+  text('reveal-caption', '지금까지 완료한 추첨을 정리하고 있어요.');
+}
+$('stop-button').addEventListener('click', stopExperiment);
+$('reveal-stop').addEventListener('click', stopExperiment);
 
-function start(overrideRounds) {
+function skipReveal() {
+  if (!state.reveal) return;
+  state.reveal.skip();
+  $('reveal-skip').disabled = true;
+  text('reveal-skip', '결과 확인 중…');
+  text('reveal-caption', '내 영수증의 결과를 확인하고 있어요.');
+}
+$('reveal-skip').addEventListener('click', skipReveal);
+$('draw-theater').addEventListener('cancel', event => { event.preventDefault(); skipReveal(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) skipReveal(); });
+
+function revealNumber(number, index, animate = true) {
+  const bonus = index === 6;
+  const slot = $('reveal-numbers').querySelector(`[data-reveal-slot="${index}"]`);
+  slot.textContent = number;
+  slot.className = `reveal-slot is-revealed ${ballColor(number)}${bonus ? ' reveal-bonus' : ''}${animate ? ' just-revealed' : ''}`;
+  slot.setAttribute('aria-label', `${bonus ? '보너스' : `${index + 1}번째 당첨`} 번호 ${number}번`);
+  const ball = document.createElement('span');
+  ball.className = `reveal-hero-number ${ballColor(number)}${animate ? ' ball-arrive' : ''}`;
+  ball.textContent = number;
+  $('reveal-current').replaceChildren(ball);
+}
+
+function openDrawReveal(config, ready) {
+  const dialog = $('draw-theater');
+  text('reveal-title', `${budgetLabel(config.rounds * config.tickets)}, 내 운은…`);
+  text('reveal-subtitle', config.rounds === 1 ? `내 로또 ${format.format(config.tickets)}게임 · 한 번의 추첨` : `${format.format(config.rounds)}회 중 마지막 추첨 · 전체 결과는 곧 공개`);
+  text('reveal-calculation', `실제 지출 0원 · ${format.format(config.rounds * config.tickets)}게임`);
+  text('reveal-caption', '제발, 이번엔…');
+  text('reveal-skip', '결과 먼저 보기 →');
+  $('reveal-skip').disabled = false;
+  $('reveal-stop').hidden = false; $('reveal-stop').disabled = false;
+  $('reveal-numbers').querySelectorAll('[data-reveal-slot]').forEach((slot, index) => {
+    slot.textContent = '·'; slot.className = `reveal-slot${index === 6 ? ' reveal-bonus' : ''}`;
+    slot.setAttribute('aria-label', `${index === 6 ? '보너스 공' : `${index + 1}번째 공`} 공개 전`);
+  });
+  dialog.dataset.phase = 'countdown';
+  dialog.showModal(); document.body.classList.add('is-drawing');
+  $('reveal-title').focus({ preventScroll: true });
+  return playDrawReveal({ ready, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, update(frame) {
+    dialog.dataset.phase = frame.phase;
+    if (frame.phase === 'countdown' || frame.phase === 'mixing' || frame.phase === 'bonus') {
+      const count = document.createElement('span'); count.className = 'reveal-countdown';
+      count.textContent = frame.phase === 'countdown' ? frame.value : '?';
+      $('reveal-current').replaceChildren(count);
+      const caption = frame.phase === 'countdown' ? '제발, 이번엔…' : frame.phase === 'bonus' ? '한 박자 더. 보너스 공은…?' : '공을 섞고 있어요. 곧 나옵니다.';
+      text('reveal-caption', caption);
+      text('reveal-status', frame.phase === 'countdown' ? `추첨 시작 ${frame.value}` : caption);
+    } else if (frame.phase === 'number') {
+      revealNumber(frame.number, frame.index);
+      const label = frame.bonus ? '보너스 공' : `${frame.index + 1}번째 공`;
+      text('reveal-caption', frame.bonus ? '보너스 공까지, 추첨 완료!' : frame.index === 5 ? '당첨번호 6개, 다 나왔어요.' : `${label}, ${frame.number}번!`);
+      text('reveal-status', `${label}, ${frame.number}번.`);
+    } else if (frame.phase === 'all') {
+      frame.numbers.forEach((number, index) => revealNumber(number, index, false));
+    } else if (frame.phase === 'complete') {
+      text('reveal-caption', '번호는 나왔고… 내 운의 정체는?');
+      text('reveal-status', '추첨 완료. 내 로또 유형을 확인합니다.');
+      text('reveal-skip', '내 운 확인 중…');
+    }
+  } });
+}
+
+function start(overrideRounds, { replay = false } = {}) {
   if (state.worker) return;
   let config;
   try {
@@ -230,23 +299,33 @@ function start(overrideRounds) {
   headline('이번에는', '어떤 결과가?');
   text('result-description', config.rounds === 1 ? `구매한 ${config.tickets}게임에 당첨번호 한 세트를 대조합니다.` : `${format.format(config.rounds)}회 연속 추첨 · 회차마다 ${config.tickets}게임 · ${config.mode === 'auto' ? '자동 번호' : '고정 번호'}`);
   try {
-    const worker = new Worker(new URL('./worker.js?v=9', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./worker.js?v=11', import.meta.url), { type: 'module' });
     state.worker = worker;
+    let deliver;
+    const ready = new Promise(resolve => { deliver = resolve; });
+    if (!replay) state.reveal = openDrawReveal(config, ready);
     worker.onmessage = ({ data }) => {
+      if (state.worker !== worker) return;
       if (data.type === 'error') { fail(data.message); return; }
       if (!data.result) return;
       const finished = data.type === 'done' || data.type === 'stopped';
-      if (finished) { worker.terminate(); $('stop-button').hidden = true; $('draw-stage').classList.remove('is-running'); }
-      render(data.result, finished, data.type === 'stopped');
+      if (!finished) {
+        render(data.result, false, false);
+        text('reveal-calculation', `${format.format(data.result.rounds)} / ${format.format(config.rounds)}회 추첨 · 영수증 대조 중`);
+      }
       if (finished) {
-        state.result = data.result;
-        const delay = config.rounds === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 1300 : 0;
-        text('start-label', '결과 카드 준비 중…');
-        Promise.all([visualsReady, new Promise(resolve => setTimeout(resolve, delay))]).then(([ready]) => {
-          if (state.worker !== worker) return;
-          $('result-screen').classList.toggle('visual-fallback', !ready);
+        worker.terminate(); $('stop-button').hidden = true; $('reveal-stop').hidden = true;
+        deliver(data.result);
+        if (data.type === 'stopped') state.reveal?.skip();
+        text('reveal-calculation', `${format.format(data.result.games)}게임 대조 완료 · 실제 지출 0원`);
+        text('start-label', replay ? '결과 확인 중…' : '당첨번호 공개 중…');
+        Promise.all([visualsReady, state.reveal?.finished ?? ready]).then(([visualsLoaded, revealed]) => {
+          if (state.worker !== worker || !revealed) return;
+          state.result = data.result;
+          render(data.result, true, data.type === 'stopped');
+          $('result-screen').classList.toggle('visual-fallback', !visualsLoaded);
           finish(); showResultScreen();
-        });
+        }).catch(() => { if (state.worker === worker) fail('추첨을 표시하지 못했어요. 다시 시도해주세요.'); });
       }
     };
     worker.onerror = event => { event.preventDefault(); fail('실험을 불러오지 못했어요. 페이지를 새로고침하고 다시 시도해주세요.'); };
@@ -255,6 +334,9 @@ function start(overrideRounds) {
 }
 
 function finish() {
+  state.reveal?.cancel(); state.reveal = null;
+  if ($('draw-theater').open) $('draw-theater').close();
+  document.body.classList.remove('is-drawing');
   state.worker?.terminate(); state.worker = null;
   $('settings').disabled = false; $('stop-button').hidden = true;
   $('start-button').disabled = false; $('single-draw').disabled = false;
@@ -560,10 +642,11 @@ $('big-budget-draw').addEventListener('click', () => {
   start();
 });
 window.addEventListener('popstate', () => {
+  if (state.worker) { finish(); resetExperiment(); updateSettings(); }
   if (location.hash !== '#result') { showSimulator(); return; }
   const params = new URLSearchParams(location.search);
   if (state.result && params.get('s') === state.result.config.seed && Number(params.get('r')) === state.result.rounds) { state.showingFriend = params.get('c') === '1'; showResultScreen(false); }
-  else if (!state.worker) { restoreSharedExperiment(); resetExperiment(); updateSettings(); start(); }
+  else if (!state.worker) { restoreSharedExperiment(); resetExperiment(); updateSettings(); start(undefined, { replay: true }); }
 });
 
 function shareUrl(result, challenge = false) {
@@ -681,4 +764,4 @@ restoreSharedExperiment();
 if (state.picks.size === 0) state.picks = new Set(createSampler(createRandom(freshSeed()))(6));
 renderPicks();
 updateSettings();
-if (location.hash === '#result' && state.seed) start();
+if (location.hash === '#result' && state.seed) start(undefined, { replay: true });
