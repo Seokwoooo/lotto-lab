@@ -2,7 +2,8 @@ import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExp
 import { getProfile } from './profiles.js';
 import { readReceipt } from './receipts.js?v=9';
 import { nextBudgetStep } from './budget.js?v=9';
-import { playDrawReveal } from './draw-reveal.js?v=11';
+import { playDrawReveal } from './draw-reveal.js?v=12';
+import { firstPrizePresentation, createFirstPrizeEffects } from './first-prize.js?v=12';
 
 const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('ko-KR');
@@ -12,6 +13,18 @@ const state = { worker: null, reveal: null, result: null, purchase: null, seed: 
 const text = (id, value) => { $(id).textContent = value; };
 const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games === 10000 ? '1천만원치' : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
 const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
+const resultMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const firstPrizeEffects = createFirstPrizeEffects({
+  card: $('rank-1').closest('[data-rank]'), canvas: $('result-celebration'),
+  reducedMotion: () => resultMotion.matches,
+  viewport: () => ({ width: innerWidth, height: innerHeight, pixelRatio: devicePixelRatio }),
+  requestFrame: callback => requestAnimationFrame(callback),
+  cancelFrame: frame => cancelAnimationFrame(frame)
+});
+resultMotion.addEventListener('change', () => { if (resultMotion.matches) firstPrizeEffects.cancel(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) firstPrizeEffects.cancel(); });
+window.addEventListener('pagehide', () => firstPrizeEffects.cancel());
+window.addEventListener('resize', () => firstPrizeEffects.cancel());
 
 let resultVisuals;
 function prepareResultVisuals() {
@@ -198,7 +211,6 @@ $('experiment-form').addEventListener('submit', event => { event.preventDefault(
 $('single-draw').addEventListener('click', () => start(1));
 function stopExperiment() {
   if (!state.worker) return;
-  state.reveal?.skip();
   state.worker.postMessage({ type: 'stop' });
   $('stop-button').disabled = true;
   $('reveal-stop').disabled = true;
@@ -208,16 +220,7 @@ function stopExperiment() {
 $('stop-button').addEventListener('click', stopExperiment);
 $('reveal-stop').addEventListener('click', stopExperiment);
 
-function skipReveal() {
-  if (!state.reveal) return;
-  state.reveal.skip();
-  $('reveal-skip').disabled = true;
-  text('reveal-skip', '결과 확인 중…');
-  text('reveal-caption', '내 영수증의 결과를 확인하고 있어요.');
-}
-$('reveal-skip').addEventListener('click', skipReveal);
-$('draw-theater').addEventListener('cancel', event => { event.preventDefault(); skipReveal(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) skipReveal(); });
+$('draw-theater').addEventListener('cancel', event => event.preventDefault());
 
 function revealNumber(number, index, animate = true) {
   const bonus = index === 6;
@@ -237,8 +240,6 @@ function openDrawReveal(config, ready) {
   text('reveal-subtitle', config.rounds === 1 ? `내 로또 ${format.format(config.tickets)}게임 · 한 번의 추첨` : `${format.format(config.rounds)}회 중 마지막 추첨 · 전체 결과는 곧 공개`);
   text('reveal-calculation', `실제 지출 0원 · ${format.format(config.rounds * config.tickets)}게임`);
   text('reveal-caption', '제발, 이번엔…');
-  text('reveal-skip', '결과 먼저 보기 →');
-  $('reveal-skip').disabled = false;
   $('reveal-stop').hidden = false; $('reveal-stop').disabled = false;
   $('reveal-numbers').querySelectorAll('[data-reveal-slot]').forEach((slot, index) => {
     slot.textContent = '·'; slot.className = `reveal-slot${index === 6 ? ' reveal-bonus' : ''}`;
@@ -257,16 +258,13 @@ function openDrawReveal(config, ready) {
       text('reveal-caption', caption);
       text('reveal-status', frame.phase === 'countdown' ? `추첨 시작 ${frame.value}` : caption);
     } else if (frame.phase === 'number') {
-      revealNumber(frame.number, frame.index);
+      revealNumber(frame.number, frame.index, frame.animate);
       const label = frame.bonus ? '보너스 공' : `${frame.index + 1}번째 공`;
       text('reveal-caption', frame.bonus ? '보너스 공까지, 추첨 완료!' : frame.index === 5 ? '당첨번호 6개, 다 나왔어요.' : `${label}, ${frame.number}번!`);
       text('reveal-status', `${label}, ${frame.number}번.`);
-    } else if (frame.phase === 'all') {
-      frame.numbers.forEach((number, index) => revealNumber(number, index, false));
     } else if (frame.phase === 'complete') {
       text('reveal-caption', '번호는 나왔고… 내 운의 정체는?');
       text('reveal-status', '추첨 완료. 내 로또 유형을 확인합니다.');
-      text('reveal-skip', '내 운 확인 중…');
     }
   } });
 }
@@ -278,6 +276,7 @@ function start(overrideRounds, { replay = false } = {}) {
     config = currentConfig(overrideRounds ?? Number($('rounds').value));
   } catch (error) { $('settings-panel').open = true; $('form-error').hidden = false; text('form-error', error.message); toast(error.message); return; }
   if (!('Worker' in window)) { toast('이 브라우저에서는 실험을 실행할 수 없어요. 최신 브라우저에서 다시 열어주세요.'); return; }
+  firstPrizeEffects.cancel();
   const visualsReady = prepareResultVisuals();
   discardReplay();
   state.result = null;
@@ -316,7 +315,6 @@ function start(overrideRounds, { replay = false } = {}) {
       if (finished) {
         worker.terminate(); $('stop-button').hidden = true; $('reveal-stop').hidden = true;
         deliver(data.result);
-        if (data.type === 'stopped') state.reveal?.skip();
         text('reveal-calculation', `${format.format(data.result.games)}게임 대조 완료 · 실제 지출 0원`);
         text('start-label', replay ? '결과 확인 중…' : '당첨번호 공개 중…');
         Promise.all([visualsReady, state.reveal?.finished ?? ready]).then(([visualsLoaded, revealed]) => {
@@ -377,11 +375,11 @@ function render(result, finished, stopped) {
     card.classList.toggle('has-win', counts[rank] > 0);
     card.dataset.countDigits = String(counts[rank]).length;
   }
-  const misses = rounds === 1 ? `${format.format(games)}게임을 돌렸지만…` : `${format.format(rounds)}번 추첨했지만…`;
-  const winsHeadline = rounds === 1 ? `${format.format(games)}게임을 돌린 끝에…` : `${format.format(rounds)}번 추첨 끝에…`;
-  text('first-prize-story', counts[1] ? winsHeadline : misses);
-  text('first-prize-context', `${rounds === 1 ? '1회 추첨' : `${format.format(games)}게임 대조`} · 게임별 당첨 횟수`);
-  text('first-prize-end', counts[1] ? '!' : '…');
+  const firstPrize = firstPrizePresentation(result, budgetLabel(games));
+  text('first-prize-story', firstPrize.story);
+  text('first-prize-context', firstPrize.context);
+  text('first-prize-reaction', firstPrize.reaction);
+  text('first-prize-end', firstPrize.end);
   const rank = best?.rank ?? 0, wins = games - counts[0];
   text('best-rank', rank ? `최고 ${rank}등` : '아직 당첨 없음');
   text('progress-text', `${format.format(rounds)} / ${format.format(config.rounds)}번 추첨${stopped ? ' · 중간에 멈춤' : finished ? ' · 완료' : ''}`);
@@ -604,9 +602,11 @@ function showResultScreen(push = true) {
   window.scrollTo({ top: 0, behavior: 'instant' });
   $('result-page-title').setAttribute('tabindex', '-1');
   $('result-page-title').focus({ preventScroll: true });
+  firstPrizeEffects.play(result);
 }
 
 function showSimulator(fresh = false) {
+  firstPrizeEffects.cancel();
   $('simulator-screen').hidden = false; $('result-screen').hidden = true;
   document.title = '로또랩 — 100만원치 돌려본 내 운은?';
   if (fresh) {

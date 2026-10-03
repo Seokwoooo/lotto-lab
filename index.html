@@ -19,8 +19,8 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
-  <link rel="stylesheet" href="./style.css?v=11">
-  <script type="module" src="./app.js?v=11"></script>
+  <link rel="stylesheet" href="./style.css?v=12">
+  <script type="module" src="./app.js?v=12"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -84,6 +84,7 @@
         <div class="first-prize-focus" data-rank="1">
           <p id="first-prize-story" class="first-prize-story">추첨 결과는…</p>
           <p class="first-prize-outcome"><span>1등은 </span><strong id="rank-1">0</strong><small>번</small><span id="first-prize-end" aria-hidden="true">…</span></p>
+          <p id="first-prize-reaction" class="first-prize-reaction">이번엔 1등 운이 없네요…</p>
           <p id="first-prize-context" class="first-prize-context">각 게임의 당첨을 한 번씩 집계합니다.</p>
         </div>
         <div class="rank-summary" aria-label="전체 회차에서 게임별로 집계한 당첨과 낙첨 횟수">
@@ -147,9 +148,10 @@
       <span class="reveal-slot" data-reveal-slot="0">·</span><span class="reveal-slot" data-reveal-slot="1">·</span><span class="reveal-slot" data-reveal-slot="2">·</span><span class="reveal-slot" data-reveal-slot="3">·</span><span class="reveal-slot" data-reveal-slot="4">·</span><span class="reveal-slot" data-reveal-slot="5">·</span><span class="reveal-slot reveal-bonus" data-reveal-slot="6">·</span>
     </div>
     <p id="reveal-calculation" class="reveal-calculation">실제 지출 0원 · 1,000게임</p>
-    <div class="reveal-controls"><button id="reveal-skip" type="button">결과 먼저 보기 →</button><button id="reveal-stop" type="button" hidden>추첨 중단</button></div>
+    <div class="reveal-controls"><button id="reveal-stop" type="button" hidden>추첨 중단</button></div>
     <p id="reveal-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
   </dialog>
+  <canvas id="result-celebration" class="result-celebration" aria-hidden="true" hidden></canvas>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript><p class="noscript">시뮬레이션을 이용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>

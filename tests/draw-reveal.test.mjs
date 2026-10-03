@@ -38,7 +38,7 @@ test('a fast calculation still reveals the drawn balls one at a time, with the b
   assert.equal(await reveal.finished, result);
 });
 
-test('skipping bypasses the presentation but still waits for the real calculation', async t => {
+test('the reveal has no skip path and waits for a delayed real calculation', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let deliver;
   const ready = new Promise(resolve => { deliver = resolve; });
@@ -46,14 +46,14 @@ test('skipping bypasses the presentation but still waits for the real calculatio
   const reveal = playDrawReveal({ ready, update: frame => frames.push(frame) });
   let finished = false;
   reveal.finished.then(() => { finished = true; });
-  reveal.skip();
+  assert.equal(reveal.skip, undefined);
   await advance(t, 10000);
   assert.equal(finished, false);
   deliver(result);
-  await flush();
+  await advance(t, 6000);
   assert.equal(await reveal.finished, result);
-  assert.deepEqual(frames.find(frame => frame.phase === 'all')?.numbers, [7, 36, 39, 3, 42, 38, 44]);
-  assert.equal(frames.some(frame => frame.phase === 'number'), false);
+  assert.deepEqual(frames.filter(frame => frame.phase === 'number').map(frame => frame.number), [7, 36, 39, 3, 42, 38, 44]);
+  assert.equal(frames.some(frame => frame.phase === 'all'), false);
 });
 
 test('a cancelled countdown cannot publish a late calculation or reveal more balls', async t => {
@@ -83,14 +83,18 @@ test('cancelling after a ball appears clears the remaining presentation', async 
   assert.equal(frames.length, count);
 });
 
-test('reduced motion keeps all seven real numbers with a shorter presentation', async t => {
+test('reduced motion disables movement and still waits for every number', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const frames = [];
   const reveal = playDrawReveal({ ready: Promise.resolve(result), reducedMotion: true, update: frame => frames.push(frame) });
   let finished = false;
   reveal.finished.then(() => { finished = true; });
   await advance(t, 4000);
+  assert.equal(finished, false);
+  await advance(t, 4000);
   assert.equal(finished, true);
-  assert.deepEqual(frames.filter(frame => frame.phase === 'number').map(frame => frame.number), [7, 36, 39, 3, 42, 38, 44]);
+  const balls = frames.filter(frame => frame.phase === 'number');
+  assert.deepEqual(balls.map(frame => frame.number), [7, 36, 39, 3, 42, 38, 44]);
+  assert.ok(balls.every(frame => frame.animate === false));
   assert.equal(await reveal.finished, result);
 });
