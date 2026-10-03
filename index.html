@@ -10,7 +10,7 @@
   <meta property="og:title" content="로또랩 — 당신의 로또 유형은?">
   <meta property="og:description" content="100만원치 돌렸더니… 퇴사각? 일단 출근? 1,000게임으로 내 운 캐릭터를 뽑고 친구와 붙어보세요. 실제 지출은 0원.">
   <meta property="og:url" content="https://lucianlabs.dev/lotto/">
-  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=8">
+  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=9">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="100만원치 돌린 내 운은? 지친 출근 공과 왕관을 쓴 행운 공. 1,000게임, 실제 지출 0원.">
@@ -19,8 +19,8 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
-  <link rel="stylesheet" href="./style.css?v=8">
-  <script type="module" src="./app.js?v=8"></script>
+  <link rel="stylesheet" href="./style.css?v=9">
+  <script type="module" src="./app.js?v=9"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -81,13 +81,16 @@
       <div class="result-page-heading"><h1 id="result-page-title">100만원치 돌린 내 운은…</h1><p><strong id="stat-games">0게임</strong><span aria-hidden="true"> · </span><span id="result-page-subtitle">전체 추첨 결과</span></p></div>
       <section class="result-summary" aria-labelledby="summary-title">
         <div class="section-top"><h2 id="summary-title">전체 당첨 내역</h2><span id="best-rank" class="tiny-tag">추첨 완료</span></div>
-        <div class="rank-summary" aria-label="전체 회차의 등수별 게임 수">
-          <div data-rank="1"><span>1등</span><strong id="rank-1">0</strong><small>게임</small></div>
-          <div data-rank="2"><span>2등</span><strong id="rank-2">0</strong><small>게임</small></div>
-          <div data-rank="3"><span>3등</span><strong id="rank-3">0</strong><small>게임</small></div>
-          <div data-rank="4"><span>4등</span><strong id="rank-4">0</strong><small>게임</small></div>
-          <div data-rank="5"><span>5등</span><strong id="rank-5">0</strong><small>게임</small></div>
-          <div data-rank="0" class="rank-lost"><span>꽝</span><strong id="rank-0">0</strong><small>게임</small></div>
+        <div class="first-prize-focus" data-rank="1">
+          <div><p id="first-prize-story" class="first-prize-story">추첨 결과는…</p><p id="first-prize-context" class="first-prize-context">각 게임의 당첨을 한 번씩 집계합니다.</p></div>
+          <p class="first-prize-outcome"><span>1등은</span><strong id="rank-1">0</strong><small>번</small><span id="first-prize-end" aria-hidden="true">…</span></p>
+        </div>
+        <div class="rank-summary" aria-label="전체 회차에서 게임별로 집계한 당첨과 낙첨 횟수">
+          <div data-rank="2"><span>2등</span><div class="rank-count"><strong id="rank-2">0</strong><small>번</small></div></div>
+          <div data-rank="3"><span>3등</span><div class="rank-count"><strong id="rank-3">0</strong><small>번</small></div></div>
+          <div data-rank="4"><span>4등</span><div class="rank-count"><strong id="rank-4">0</strong><small>번</small></div></div>
+          <div data-rank="5"><span>5등</span><div class="rank-count"><strong id="rank-5">0</strong><small>번</small></div></div>
+          <div data-rank="0" class="rank-lost"><span>꽝</span><div class="rank-count"><strong id="rank-0">0</strong><small>번</small></div></div>
         </div>
         <div class="metrics" aria-label="전체 가상 구매 비용과 당첨금"><div><span>가상 구매 금액</span><strong id="stat-cost">0원</strong></div><div><span>예시 당첨금 · 세전</span><strong id="stat-prize">0원</strong></div><div><span>가상 손익</span><strong id="stat-balance">0원</strong></div></div>
       </section>

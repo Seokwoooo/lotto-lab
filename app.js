@@ -1,7 +1,7 @@
-import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=8';
+import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=9';
 import { getProfile } from './profiles.js';
-import { readReceipt } from './receipts.js?v=8';
-import { nextBudgetStep } from './budget.js?v=8';
+import { readReceipt } from './receipts.js?v=9';
+import { nextBudgetStep } from './budget.js?v=9';
 
 const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('ko-KR');
@@ -112,8 +112,9 @@ function resetExperiment() {
   state.purchasePage = 0; state.resultPage = 0;
   for (const id of ['stat-games', 'stat-cost', 'stat-prize', 'stat-balance']) metric(id, 0, id === 'stat-games' ? '게임' : '원');
   for (let rank = 0; rank <= 5; rank++) {
-    text(`rank-${rank}`, '0'); document.querySelector(`[data-rank="${rank}"]`)?.classList.remove('has-win');
-    document.querySelector(`[data-rank="${rank}"]`).dataset.countDigits = '1';
+    text(`rank-${rank}`, '0');
+    const card = $(`rank-${rank}`).closest('[data-rank]');
+    card.classList.remove('has-win'); card.dataset.countDigits = '1';
   }
   $('stat-balance').classList.remove('negative', 'positive');
   text('best-rank', '아직 추첨 전');
@@ -229,7 +230,7 @@ function start(overrideRounds) {
   headline('이번에는', '어떤 결과가?');
   text('result-description', config.rounds === 1 ? `구매한 ${config.tickets}게임에 당첨번호 한 세트를 대조합니다.` : `${format.format(config.rounds)}회 연속 추첨 · 회차마다 ${config.tickets}게임 · ${config.mode === 'auto' ? '자동 번호' : '고정 번호'}`);
   try {
-    const worker = new Worker(new URL('./worker.js?v=8', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./worker.js?v=9', import.meta.url), { type: 'module' });
     state.worker = worker;
     worker.onmessage = ({ data }) => {
       if (data.type === 'error') { fail(data.message); return; }
@@ -290,9 +291,15 @@ function render(result, finished, stopped) {
   $('stat-balance').classList.toggle('positive', prize > games * 1000);
   for (let rank = 0; rank <= 5; rank++) {
     text(`rank-${rank}`, format.format(counts[rank]));
-    document.querySelector(`[data-rank="${rank}"]`)?.classList.toggle('has-win', counts[rank] > 0);
-    document.querySelector(`[data-rank="${rank}"]`).dataset.countDigits = String(counts[rank]).length;
+    const card = $(`rank-${rank}`).closest('[data-rank]');
+    card.classList.toggle('has-win', counts[rank] > 0);
+    card.dataset.countDigits = String(counts[rank]).length;
   }
+  const misses = rounds === 1 ? `${format.format(games)}게임을 돌렸지만…` : `${format.format(rounds)}번 추첨했지만…`;
+  const winsHeadline = rounds === 1 ? `${format.format(games)}게임을 돌린 끝에…` : `${format.format(rounds)}번 추첨 끝에…`;
+  text('first-prize-story', counts[1] ? winsHeadline : misses);
+  text('first-prize-context', `${rounds === 1 ? '1회 추첨' : `${format.format(games)}게임 대조`} · 게임별 당첨 횟수`);
+  text('first-prize-end', counts[1] ? '!' : '…');
   const rank = best?.rank ?? 0, wins = games - counts[0];
   text('best-rank', rank ? `최고 ${rank}등` : '아직 당첨 없음');
   text('progress-text', `${format.format(rounds)} / ${format.format(config.rounds)}번 추첨${stopped ? ' · 중간에 멈춤' : finished ? ' · 완료' : ''}`);
