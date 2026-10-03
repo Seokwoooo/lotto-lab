@@ -1,12 +1,15 @@
-import { createExperiment } from './core.js?v=6';
+import { createExperiment, validateConfig } from './core.js?v=7';
+import { createReceiptArchive, indexReceipts } from './receipts.js?v=7';
 
-let experiment = null, cancelled = false, lastReport = -Infinity;
+let experiment = null, archive = null, cancelled = false, lastReport = -Infinity;
 
 self.onmessage = ({ data }) => {
   if (data.type === 'stop') { cancelled = true; return; }
   if (data.type !== 'start') return;
   try {
-    experiment = createExperiment(data.config);
+    const config = validateConfig(data.config);
+    archive = createReceiptArchive(config);
+    experiment = createExperiment(config, { onRound: last => archive.record(last) });
     cancelled = false;
     lastReport = -Infinity;
     run();
@@ -28,9 +31,14 @@ function run() {
     const now = performance.now();
     if (finished || now - lastReport >= 100) {
       const result = experiment.snapshot();
-      // Only the final message needs receipt arrays. Progress stays small.
+      // Progress stays small. The full history moves once, without copying its buffers.
       if (!finished) result.last = null;
-      self.postMessage({ type: cancelled ? 'stopped' : complete ? 'done' : 'progress', result });
+      if (finished) {
+        result.receipts = archive.snapshot();
+        result.receiptIndex = indexReceipts(result.receipts);
+      }
+      const transfer = finished ? [result.receipts.numbers.buffer, result.receipts.ranks.buffer, result.receipts.draws.buffer, result.receiptIndex.winners.buffer, result.receiptIndex.losers.buffer] : [];
+      self.postMessage({ type: cancelled ? 'stopped' : complete ? 'done' : 'progress', result }, transfer);
       lastReport = now;
     }
     if (!finished) setTimeout(run, 0);

@@ -70,7 +70,7 @@ export function firstPrizeChance(rounds, tickets = 1, mode = 'auto') {
   return -Math.expm1(trials * Math.log1p(-1 / COMBINATIONS));
 }
 
-export function createExperiment(input) {
+export function createExperiment(input, { onRound } = {}) {
   const config = validateConfig(input);
   const sample = createSampler(createRandom(config.seed));
   const marks = new Uint8Array(46);
@@ -99,6 +99,7 @@ export function createExperiment(input) {
       if (rank > 0 && (!best || rank < best.rank)) best = { round: rounds, ticket: t + 1, rank, numbers: [...numbers].sort((a, b) => a - b), winning, bonus };
     }
     last = { round: rounds, winning, bonus, tickets: visible, omitted: Math.max(0, config.tickets - visible.length) };
+    onRound?.(last);
   }
 
   return {
