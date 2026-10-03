@@ -1,6 +1,7 @@
-import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=7';
+import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=8';
 import { getProfile } from './profiles.js';
-import { readReceipt } from './receipts.js?v=7';
+import { readReceipt } from './receipts.js?v=8';
+import { nextBudgetStep } from './budget.js?v=8';
 
 const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('ko-KR');
@@ -8,8 +9,32 @@ const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
 const state = { worker: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, receiptIndex: null, receiptFilter: 'all', receiptAnimation: null, showingFriend: false, challenge: null };
 const text = (id, value) => { $(id).textContent = value; };
-const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
+const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games === 10000 ? '1천만원치' : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
 const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
+
+let resultVisuals;
+function prepareResultVisuals() {
+  if (resultVisuals) return resultVisuals;
+  const images = ['lotto-mascots-sheet.png', 'lotto-official.svg'].map(asset => {
+    const image = new Image();
+    image.src = new URL(`./assets/${asset}`, import.meta.url).href;
+    return image.decode();
+  });
+  const fonts = document.fonts ? Promise.all([
+    document.fonts.load('800 16px Pretendard', '로또 당첨 내 운'),
+    document.fonts.load('800 16px Manrope', '0123456789')
+  ]).then(() => document.fonts.ready) : Promise.resolve();
+  // A slow or failed asset must not strand a completed experiment. The fallback
+  // keeps the result stable even if that asset arrives after the timeout.
+  resultVisuals = new Promise(resolve => {
+    const timer = setTimeout(() => resolve(false), 5000);
+    Promise.allSettled([...images, fonts]).then(results => {
+      clearTimeout(timer);
+      resolve(results.every(result => result.status === 'fulfilled'));
+    });
+  }).then(ready => { if (!ready) resultVisuals = null; return ready; });
+  return resultVisuals;
+}
 
 function freshSeed() {
   const words = crypto.getRandomValues(new Uint32Array(4));
@@ -183,6 +208,7 @@ function start(overrideRounds) {
     config = currentConfig(overrideRounds ?? Number($('rounds').value));
   } catch (error) { $('settings-panel').open = true; $('form-error').hidden = false; text('form-error', error.message); toast(error.message); return; }
   if (!('Worker' in window)) { toast('이 브라우저에서는 실험을 실행할 수 없어요. 최신 브라우저에서 다시 열어주세요.'); return; }
+  const visualsReady = prepareResultVisuals();
   discardReplay();
   state.result = null;
   state.receiptIndex = null;
@@ -194,6 +220,7 @@ function start(overrideRounds) {
   $('start-button').disabled = true; $('single-draw').disabled = true;
   $('new-purchase').disabled = true;
   $('big-budget-draw').disabled = true;
+  $('result-screen').setAttribute('aria-busy', 'true');
   for (const id of ['ticket-prev', 'ticket-next', 'ticket-jump']) $(id).disabled = true;
   text('stop-button', '여기서 멈추기');
   $('result-share').disabled = true; $('result-save').disabled = true;
@@ -202,7 +229,7 @@ function start(overrideRounds) {
   headline('이번에는', '어떤 결과가?');
   text('result-description', config.rounds === 1 ? `구매한 ${config.tickets}게임에 당첨번호 한 세트를 대조합니다.` : `${format.format(config.rounds)}회 연속 추첨 · 회차마다 ${config.tickets}게임 · ${config.mode === 'auto' ? '자동 번호' : '고정 번호'}`);
   try {
-    const worker = new Worker(new URL('./worker.js?v=7', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./worker.js?v=8', import.meta.url), { type: 'module' });
     state.worker = worker;
     worker.onmessage = ({ data }) => {
       if (data.type === 'error') { fail(data.message); return; }
@@ -213,7 +240,12 @@ function start(overrideRounds) {
       if (finished) {
         state.result = data.result;
         const delay = config.rounds === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 1300 : 0;
-        setTimeout(() => { finish(); showResultScreen(); }, delay);
+        text('start-label', '결과 카드 준비 중…');
+        Promise.all([visualsReady, new Promise(resolve => setTimeout(resolve, delay))]).then(([ready]) => {
+          if (state.worker !== worker) return;
+          $('result-screen').classList.toggle('visual-fallback', !ready);
+          finish(); showResultScreen();
+        });
       }
     };
     worker.onerror = event => { event.preventDefault(); fail('실험을 불러오지 못했어요. 페이지를 새로고침하고 다시 시도해주세요.'); };
@@ -227,6 +259,7 @@ function finish() {
   $('start-button').disabled = false; $('single-draw').disabled = false;
   $('new-purchase').disabled = false;
   $('big-budget-draw').disabled = false;
+  $('result-screen').setAttribute('aria-busy', 'false');
   $('draw-stage').classList.remove('is-running');
   $('result-share').disabled = !state.result?.games; $('result-save').disabled = !state.result?.games;
   if (state.purchase && !state.result) renderTicketPage(state.purchase.last, state.purchase.config, false, 'ticket-list', state.purchasePage);
@@ -470,6 +503,12 @@ function showResultScreen(push = true) {
   for (const filter of ['all', 'winners', 'losers']) text(`receipts-${filter}`, format.format(filter === 'all' ? state.receiptIndex.total : state.receiptIndex[filter].length));
   renderResultReceipt();
   showChallenge(result);
+  const next = nextBudgetStep(result.games);
+  text('next-budget-kicker', next.repeat ? '이번에도 한 번 더' : '이번에는');
+  text('next-budget-amount', next.amount);
+  text('next-budget-games', `${format.format(next.games)}게임 · ${format.format(next.rounds)}회 추첨`);
+  $('next-budget-character').className = `mascot mascot-${next.games === 10_000 ? 'clover' : 'royal'} next-budget-character`;
+  $('big-budget-draw').setAttribute('aria-label', `${next.repeat ? '1억원 한 번 더' : `이번에는 ${next.amount}`} 돌려보기. 자동 ${format.format(next.games)}게임, 실제 지출 0원.`);
   $('simulator-screen').hidden = true; $('result-screen').hidden = false;
   document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
   if (push && location.href !== shareUrl(result, state.showingFriend)) history.pushState({ view: 'result' }, '', shareUrl(result, state.showingFriend));
@@ -504,10 +543,11 @@ $('result-again').addEventListener('click', () => {
   showSimulator(true);
 });
 $('big-budget-draw').addEventListener('click', () => {
-  if (state.worker) return;
+  if (state.worker || !state.result) return;
+  const next = nextBudgetStep(state.result.games);
   state.challenge = null; state.showingFriend = false;
   $('shared-banner').hidden = true;
-  $('rounds').value = 100; $('tickets').value = 1000;
+  $('rounds').value = next.rounds; $('tickets').value = next.tickets;
   document.querySelector('input[name="mode"][value="auto"]').checked = true;
   showSimulator(true);
   start();

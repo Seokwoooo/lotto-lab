@@ -1,5 +1,5 @@
-import { createExperiment, validateConfig } from './core.js?v=7';
-import { createReceiptArchive, indexReceipts } from './receipts.js?v=7';
+import { createExperiment, validateConfig } from './core.js?v=8';
+import { createReceiptArchive, indexReceipts } from './receipts.js?v=8';
 
 let experiment = null, archive = null, cancelled = false, lastReport = -Infinity;
 

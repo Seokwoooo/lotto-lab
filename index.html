@@ -10,7 +10,7 @@
   <meta property="og:title" content="로또랩 — 당신의 로또 유형은?">
   <meta property="og:description" content="100만원치 돌렸더니… 퇴사각? 일단 출근? 1,000게임으로 내 운 캐릭터를 뽑고 친구와 붙어보세요. 실제 지출은 0원.">
   <meta property="og:url" content="https://lucianlabs.dev/lotto/">
-  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=7">
+  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=8">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="100만원치 돌린 내 운은? 지친 출근 공과 왕관을 쓴 행운 공. 1,000게임, 실제 지출 0원.">
@@ -18,8 +18,9 @@
   <link rel="canonical" href="https://lucianlabs.dev/lotto/">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="./style.css?v=7">
-  <script type="module" src="./app.js?v=7"></script>
+  <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
+  <link rel="stylesheet" href="./style.css?v=8">
+  <script type="module" src="./app.js?v=8"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -114,9 +115,12 @@
           <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow">이번에 뽑은 내 운 <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p></div></article>
           <details class="fortune-details"><summary>내 운 풀이 <span class="details-sign" aria-hidden="true">+</span></summary><p id="type-explanation"></p><p id="type-facts" class="type-facts"></p><p class="type-friend">친구는 혹시 <strong id="type-friend"></strong>?</p></details>
           <section class="friend-challenge" id="friend-challenge" hidden aria-labelledby="challenge-title"><h3 id="challenge-title"></h3><p id="challenge-copy"></p><div id="challenge-scores" class="challenge-scores" hidden><div><span>친구</span><strong id="friend-prize"></strong></div><div><span>나</span><strong id="my-prize"></strong></div></div><button id="challenge-start" class="challenge-start" type="button">같은 금액으로 붙어보기 ↗</button></section>
+          <button id="big-budget-draw" class="big-budget-action" type="button">
+            <span class="next-budget-copy"><span id="next-budget-kicker" class="next-budget-kicker">이번에는</span><span class="next-budget-title"><strong id="next-budget-amount">1천만원</strong><span>돌려보기</span></span><span id="next-budget-games" class="next-budget-games">10,000게임 · 10회 추첨</span><span class="next-budget-free">실제 지출은 0원</span></span>
+            <span id="next-budget-character" class="mascot mascot-clover next-budget-character" aria-hidden="true"></span><span class="next-budget-arrow" aria-hidden="true">↗</span>
+          </button>
           <div class="result-actions"><button id="result-share" class="result-share" type="button">친구에게 내 결과 보내기 <span aria-hidden="true">↗</span></button><button id="result-save" class="result-save" type="button">이미지 저장</button><button id="result-again" class="result-again" type="button">다시 돌려보기</button></div>
           <p id="share-nudge" class="share-nudge">같은 금액으로 친구의 운과 붙어보세요.</p>
-          <button id="big-budget-draw" class="big-budget-action" type="button">이번에는 1억원치 돌려보기 <span aria-hidden="true">↗</span></button>
         </div>
       </div>
       <details class="result-breakdown"><summary>등수 기준과 예시 당첨금 <span class="details-sign" aria-hidden="true">+</span></summary><table><caption class="sr-only">로또 등수 조건과 이 시뮬레이터의 예시 당첨금</caption><tbody><tr><th scope="row">1등 · 6개 일치</th><td>20억 원 <small>예시</small></td></tr><tr><th scope="row">2등 · 5개 + 보너스</th><td>5,000만 원 <small>예시</small></td></tr><tr><th scope="row">3등 · 5개 일치</th><td>150만 원 <small>예시</small></td></tr><tr><th scope="row">4등 · 4개 일치</th><td>5만 원</td></tr><tr><th scope="row">5등 · 3개 일치</th><td>5천 원</td></tr></tbody></table><p class="prize-note">실제 1~3등 금액은 회차마다 달라집니다. 위의 예시 금액으로 계산하며 세금과 이월은 반영하지 않습니다.</p></details>

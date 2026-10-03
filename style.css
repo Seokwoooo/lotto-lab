@@ -452,8 +452,25 @@ td small{font-size:12px;color:var(--muted);padding-left:4px}
 .result-share{min-height:46px!important;font-size:14px!important;padding:10px 13px!important}
 .result-save,.result-again{background:#fff;border:1px solid #dcd7cb!important;font-size:13px!important;color:#596171}
 .share-nudge{font-size:11px;margin-top:7px}
-.big-budget-action{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid #dccb75;background:#fff0ad;color:var(--ink);padding:11px 13px;border-radius:7px;font-size:13px;font-weight:750;min-height:44px;margin-top:20px}
-.big-budget-action>span{font-size:19px}
+.big-budget-action{display:grid;grid-template-columns:minmax(0,1fr) 76px 32px;align-items:center;gap:8px;position:relative;width:100%;border:2px solid var(--ink);background:var(--yellow);color:var(--ink);padding:17px 15px;border-radius:12px;box-shadow:0 5px 0 var(--ink);margin-top:23px;text-align:left;transition:transform .15s,box-shadow .15s,background .15s}
+.big-budget-action:hover:not(:disabled){background:#ffdb28;transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
+.big-budget-action:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.next-budget-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.next-budget-kicker{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:3px}
+.next-budget-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 7px;line-height:1.3}
+.next-budget-title strong{font-size:31px;font-weight:900;letter-spacing:-1px}
+.next-budget-title>span{font-size:15px;font-weight:800;white-space:nowrap}
+.next-budget-games{font-size:11px;font-weight:600;line-height:1.6;margin-top:7px}
+.next-budget-free{font-size:10px;font-weight:650;margin-top:1px;color:#62613c}
+.next-budget-character{width:76px;transform:rotate(8deg)}
+.next-budget-arrow{display:grid;place-items:center;width:32px;height:32px;background:var(--ink);color:var(--yellow);border-radius:50%;font-size:21px;font-weight:800;transition:transform .15s}
+.big-budget-action:hover:not(:disabled) .next-budget-arrow{transform:rotate(9deg)}
+.result-screen.visual-fallback{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;--mono:'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+.visual-fallback .mascot{background-image:none;border-radius:50%;background-color:var(--yellow);border:2px solid var(--ink);display:grid;place-items:center}
+.visual-fallback .mascot::after{content:'✦';font-size:40px;color:var(--ink)}
+.visual-fallback .purchase-brand{position:relative}
+.visual-fallback .purchase-brand img{visibility:hidden}
+.visual-fallback .purchase-brand::before{content:'Lotto 6/45';position:absolute;left:0;color:var(--blue);font-size:21px;font-weight:900;line-height:1}
 .friend-challenge{margin-top:15px;padding:14px;border-radius:8px}
 .friend-challenge h3{font-size:17px}
 .friend-challenge>p{font-size:13px}
