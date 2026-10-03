@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1748d5">
-  <title>로또랩 — 본인의 운을 테스트해보세요!</title>
-  <meta name="description" content="가상 로또 5천 원어치, 5게임을 한 번 추첨해보세요. 구매 영수증을 확인하고, 16가지 로또 운 유형과 결과 카드를 친구에게 공유하세요. 1등 확률은 8,145,060분의 1.">
+  <meta name="theme-color" content="#ffe34d">
+  <title>로또랩 — 10만원치 돌려본 내 운은?</title>
+  <meta name="description" content="10만원치 로또 100게임, 실제 지출은 0원. 내 운 캐릭터를 뽑고 친구에게 도전장을 보내세요. 실제 로또 규칙으로 추첨하며 1등 확률은 8,145,060분의 1.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="로또랩 — 당신의 로또 유형은?">
-  <meta property="og:description" content="진짜 행운아? 평범한 로또인? 5게임으로 내 로또 유형을 확인하고 결과 카드를 공유하세요. 실제 돈은 0원.">
+  <meta property="og:description" content="10만원치 돌렸더니… 퇴사각? 일단 출근? 100게임으로 내 운 캐릭터를 뽑고 친구와 붙어보세요. 실제 지출은 0원.">
   <meta property="og:url" content="https://lucianlabs.dev/lotto/">
-  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=3">
+  <meta property="og:image" content="https://lucianlabs.dev/lotto/assets/og-image.png?v=4">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="공식 로또 6/45 로고와 오색 로또 공. 본인의 운을 테스트해보세요!">
+  <meta property="og:image:alt" content="10만원치 돌린 내 운은? 지친 출근 공과 왕관을 쓴 행운 공. 100게임, 실제 지출 0원.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://lucianlabs.dev/lotto/">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="./style.css?v=3">
-  <script type="module" src="./app.js?v=3"></script>
+  <link rel="stylesheet" href="./style.css?v=4">
+  <script type="module" src="./app.js?v=4"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -30,25 +30,28 @@
   <main id="main" class="page-width">
     <div id="simulator-screen">
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">이번엔 내 차례일까?</h1>
-        <p class="intro-copy">구매 번호를 확인하고, 오늘의 운을 추첨해보세요.</p>
+        <p class="intro-eyebrow">100게임. 한 번의 추첨. 내 운의 정체.</p>
+        <h1 id="page-title">10만원치 사면,<br><span>내 운은 어떨까?</span></h1>
+        <p class="intro-copy">돈은 안 쓰고, 운만 써보세요.</p>
+        <span class="hero-mascot mascot mascot-warm" aria-hidden="true"></span>
       </section>
       <div id="shared-banner" class="shared-banner" hidden><span>친구가 공유한 번호와 추첨입니다.</span><button id="own-challenge" type="button">내 운으로 도전</button></div>
       <div class="lab-layout">
         <section class="purchase-ticket" id="purchase-ticket" aria-labelledby="purchase-title">
           <div class="purchase-heading"><h2 id="purchase-title">내 로또 구매 영수증</h2><span id="purchase-status">추첨 대기</span></div>
-          <p class="purchase-caption" id="purchase-caption">아래 5게임으로 한 번 추첨합니다.</p>
+          <p class="purchase-caption" id="purchase-caption">100게임을 5게임씩 나눠 담았어요.</p>
           <div id="ticket-list" class="ticket-list" aria-label="구매한 게임의 번호 목록"></div>
-          <div class="purchase-total"><span>가상 구매 · <b id="ticket-count">5게임</b></span><strong id="ticket-cost">5,000원</strong></div>
+          <nav class="receipt-pager" id="ticket-pager" aria-label="구매 영수증 넘기기"><button id="ticket-prev" type="button" aria-label="이전 구매 영수증">←</button><span id="ticket-page" aria-live="polite">1 / 20장</span><button id="ticket-next" type="button" aria-label="다음 구매 영수증">→</button></nav>
+          <div class="purchase-total"><span>가상 구매 · <b id="ticket-count">100게임</b></span><strong id="ticket-cost">100,000원</strong></div>
           <button id="new-purchase" class="reroll-button" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3a7 7 0 0 0 11.6-1"/></svg><span>자동 번호 다시 뽑기</span></button>
         </section>
         <section class="draw-stage" id="draw-stage" aria-label="당첨번호 추첨">
-          <div class="draw-intro"><span class="eyebrow">LOTTO 6/45 · 가상 추첨</span><h2>번호는 준비됐어요.<br>이제 운을 확인할 차례.</h2><p>당첨번호 6개와 보너스 1개를 뽑아<br>내 구매 번호와 비교합니다.</p></div>
-          <div class="draw-actions"><button class="start-button" id="start-button" form="experiment-form" type="submit"><span id="start-label">이 5게임 추첨하기</span></button><button class="single-button" type="button" id="single-draw" hidden>1회만 추첨</button><button id="stop-button" class="stop-button" type="button" hidden>여기서 멈추기</button></div>
-          <p class="draw-action-note" id="draw-action-note">당첨번호 6개 + 보너스 1개를 뽑아 대조합니다.</p>
+          <div class="draw-intro"><div class="mascot-cast" aria-hidden="true"><div class="cast-member"><span class="cast-speech">일단 출근…</span><span class="mascot mascot-office"></span></div><div class="cast-member"><span class="cast-speech">혹시 퇴사각?</span><span class="mascot mascot-royal"></span></div></div><p>너는 어느 쪽?</p></div>
+          <div class="draw-actions"><button class="start-button" id="start-button" form="experiment-form" type="submit"><span id="start-label">10만원치 바로 돌려보기</span><span class="button-arrow" aria-hidden="true">↗</span></button><button class="single-button" type="button" id="single-draw" hidden>1회만 추첨</button><button id="stop-button" class="stop-button" type="button" hidden>여기서 멈추기</button></div>
+          <p class="draw-action-note" id="draw-action-note">실제 지출 0원 · 당첨번호 한 세트에 100게임 대조</p>
           <div class="draw-live" aria-live="polite">
             <div class="draw-top"><span id="draw-status">추첨 준비 완료</span><span id="result-kicker">내 번호를 먼저 확인해보세요.</span></div>
-            <h3 id="result-headline">내 복권 5게임, <em>당첨될까?</em></h3><p id="result-description"></p>
+            <h3 id="result-headline">내 복권 100게임, <em>당첨될까?</em></h3><p id="result-description"></p>
             <div class="draw-label"><span id="draw-caption">당첨번호 · 추첨 전</span><span>보너스</span></div>
             <div id="winning-balls" class="winning-balls" aria-label="추첨 대기"><span class="ball placeholder">?</span><span class="ball placeholder blue">?</span><span class="ball placeholder red">?</span><span class="ball placeholder gray">?</span><span class="ball placeholder green">?</span><span class="ball placeholder">?</span><span class="bonus-plus" aria-hidden="true">+</span><span class="ball placeholder blue bonus">?</span></div>
             <div class="draw-bottom"><span id="progress-text">추첨 대기</span><span id="progress-percent">0%</span></div><progress id="progress" value="0" max="100" aria-label="실험 진행률"></progress>
@@ -56,13 +59,13 @@
         </section>
       </div>
       <details class="setup" id="settings-panel">
-        <summary><span>추첨 설정</span><span id="settings-summary">자동 · 5게임 · 1회</span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary><span>금액·번호 바꾸기</span><span id="settings-summary">자동 · 100게임 · 1회</span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <form id="experiment-form" novalidate>
           <fieldset id="settings">
             <div class="control-row"><div class="control-block"><label for="rounds">추첨 횟수</label><div class="number-input"><input id="rounds" name="rounds" type="number" min="1" max="100000" step="1" value="1" inputmode="numeric" required><span>번</span></div><div class="presets" aria-label="추첨 횟수 빠른 선택"><button type="button" data-rounds="1">1번</button><button type="button" data-rounds="52">1년</button><button type="button" data-rounds="520">10년</button><button type="button" data-rounds="5200">100년</button></div><p id="years-hint" class="field-note">기본은 한 회차만 추첨합니다.</p></div>
-            <div class="control-block"><label for="tickets">회차당 구매 게임</label><div class="number-input"><input id="tickets" name="tickets" type="number" min="1" max="100" step="1" value="5" inputmode="numeric" required><span>게임</span></div><div class="presets" aria-label="구매 게임 빠른 선택"><button type="button" data-tickets="1">1게임</button><button type="button" data-tickets="5" class="selected" aria-pressed="true">5게임</button><button type="button" data-tickets="10">10게임</button><button type="button" data-tickets="100">100게임</button></div><p class="field-note">1게임 1,000원 · 5게임 = 5,000원</p></div>
+            <div class="control-block"><label for="tickets">회차당 구매 게임</label><div class="number-input"><input id="tickets" name="tickets" type="number" min="1" max="100" step="1" value="100" inputmode="numeric" required><span>게임</span></div><div class="presets" aria-label="구매 게임 빠른 선택"><button type="button" data-tickets="1">1게임</button><button type="button" data-tickets="5">5게임</button><button type="button" data-tickets="10">10게임</button><button type="button" data-tickets="100" class="selected" aria-pressed="true">100게임</button></div><p class="field-note">1게임 1,000원 · 100게임 = 100,000원</p></div>
             </div><div class="control-block mode-block"><span class="field-label">번호 선택</span><div class="segmented"><label><input type="radio" name="mode" value="auto" checked><span>매번 자동</span></label><label><input type="radio" name="mode" value="fixed"><span>내 번호 고정</span></label></div><p id="mode-hint" class="field-note">매 추첨마다 모든 장의 번호를 새로 고릅니다.</p><div id="number-picker" class="marking-slip" hidden><div class="slip-heading"><img src="./assets/lotto-official.svg" alt="로또 6/45" width="230" height="48"><span id="slip-mode">자동 미리보기</span></div><div class="slip-instruction"><b>A</b><span>1~45 중 6개 숫자를 마킹하세요</span><span>1,000원</span></div><div class="picker-top"><span><b id="pick-count">0</b> / 6개 선택</span><button type="button" id="quick-pick">자동으로 고르기</button></div><div id="number-grid" class="number-grid" role="group" aria-label="1부터 45까지 번호 6개 선택"></div><p class="field-note">고정 모드에서는 모든 장이 같은 번호입니다. 같은 회차에 같은 번호를 여러 장 사도 1등 확률은 같습니다.</p></div></div>
-            <div class="budget"><span>구매할 게임 <b id="planned-games">5게임</b></span><span>가상 구매 비용 <strong id="planned-cost">5,000원</strong></span></div>
+            <div class="budget"><span>구매할 게임 <b id="planned-games">100게임</b></span><span>가상 구매 비용 <strong id="planned-cost">100,000원</strong></span></div>
             <p id="form-error" class="form-error" role="alert" hidden></p>
             
           </fieldset>
@@ -71,29 +74,35 @@
       </details>
       <p class="odds-note">한 게임의 1등 확률 <strong>1 / 8,145,060</strong><span>약 814만 분의 1</span></p>
 
-      <details class="how-it-works"><summary>규칙과 확률 보기 <span class="details-sign" aria-hidden="true">+</span></summary><div><section class="chance-reading"><p id="chance-explanation">자동 5게임을 실험할 때, 1등을 한 번 이상 만날 확률</p><strong id="chance-value">0.0000614<small>%</small></strong><p>추첨은 매번 독립적입니다. 이전 결과가 다음 추첨의 확률을 바꾸지 않습니다.</p></section><p>매 회차 1~45 중 중복 없는 당첨번호 6개와 보너스 번호 1개를 추첨합니다. 자동 모드는 복권마다 6개를 새로 고르고, 고정 모드는 선택한 같은 번호를 모든 장에 사용합니다. 자동 복권끼리는 같은 조합이 나올 수도 있습니다.</p><p>등수는 실제 로또 6/45 규칙으로 판정합니다. 1등 확률은 1 ÷ 조합(45, 6). 자동 모드에서 N장의 1등 누적 확률은 1 − (1 − 1/8,145,060)<sup>N</sup>입니다. 고정 모드는 한 회차의 모든 장이 같은 번호이므로 N에 추첨 횟수를 씁니다.</p><p>난수 시드는 브라우저에서 생성하며, 같은 버전·설정·시드는 같은 결과를 재현합니다. 번호 선택은 편향을 제거한 난수와 부분 셔플을 사용합니다. 복권 번호 예측이나 실제 구매 기능은 없습니다. 입력, 번호와 결과는 서버로 보내지 않습니다. 공유 링크에는 설정과 재현용 시드가 들어갑니다.</p><a href="https://www.dhlottery.co.kr/lt645/intro" target="_blank" rel="noopener noreferrer">동행복권 로또 6/45 공식 규칙</a></div></details>
+      <details class="how-it-works"><summary>규칙과 확률 보기 <span class="details-sign" aria-hidden="true">+</span></summary><div><section class="chance-reading"><p id="chance-explanation">자동 100게임을 실험할 때, 1등을 한 번 이상 만날 확률</p><strong id="chance-value">0.0012<small>%</small></strong><p>추첨은 매번 독립적입니다. 이전 결과가 다음 추첨의 확률을 바꾸지 않습니다.</p></section><p>매 회차 1~45 중 중복 없는 당첨번호 6개와 보너스 번호 1개를 추첨합니다. 자동 모드는 복권마다 6개를 새로 고르고, 고정 모드는 선택한 같은 번호를 모든 장에 사용합니다. 자동 복권끼리는 같은 조합이 나올 수도 있습니다.</p><p>등수는 실제 로또 6/45 규칙으로 판정합니다. 1등 확률은 1 ÷ 조합(45, 6). 자동 모드에서 N장의 1등 누적 확률은 1 − (1 − 1/8,145,060)<sup>N</sup>입니다. 고정 모드는 한 회차의 모든 장이 같은 번호이므로 N에 추첨 횟수를 씁니다.</p><p>난수 시드는 브라우저에서 생성하며, 같은 버전·설정·시드는 같은 결과를 재현합니다. 번호 선택은 편향을 제거한 난수와 부분 셔플을 사용합니다. 복권 번호 예측이나 실제 구매 기능은 없습니다. 추첨 계산은 브라우저에서 진행합니다. 공유 링크에는 설정과 재현용 시드, 수동 번호가 들어갑니다.</p><a href="https://www.dhlottery.co.kr/lt645/intro" target="_blank" rel="noopener noreferrer">동행복권 로또 6/45 공식 규칙</a></div></details>
     </div>
     <section id="result-screen" class="result-screen" aria-labelledby="result-page-title" hidden>
-      <div class="result-page-heading"><h1 id="result-page-title">이번 추첨 결과</h1><p>맞힌 번호는 동그라미로 표시했어요.</p></div>
+      <div class="result-page-heading"><h1 id="result-page-title">10만원치 돌린 내 운은…</h1><p id="result-page-subtitle">내 운 캐릭터가 나왔어요.</p></div>
       <div class="result-layout">
         <article class="purchase-ticket result-ticket" aria-label="내 로또 당첨 영수증">
           <div class="purchase-brand"><img src="./assets/lotto-official.svg" width="230" height="48" alt="로또 6/45"><span>당첨 확인 완료</span></div>
           <p class="type-draw-label" id="type-draw-label">당첨번호 · 마지막 공은 보너스</p><div id="result-balls" class="winning-balls" aria-label="당첨번호"></div>
           <div id="result-ticket-list" class="ticket-list" aria-label="구매 번호와 당첨 결과"></div>
+          <nav class="receipt-pager" id="result-ticket-pager" aria-label="당첨 영수증 넘기기"><button id="result-ticket-prev" type="button" aria-label="이전 당첨 영수증">←</button><span id="result-ticket-page" aria-live="polite">1 / 20장</span><button id="result-ticket-next" type="button" aria-label="다음 당첨 영수증">→</button></nav>
           <p class="purchase-legend"><span><i class="match-key"></i>당첨번호</span><span><i class="bonus-key"></i>보너스 번호</span></p>
-          <div class="result-total"><div><span>가상 구매 금액</span><strong id="result-cost">5,000원</strong></div><div><span>예시 당첨금 · 세전</span><strong id="result-prize">0원</strong></div></div>
+          <div class="result-total"><div><span>가상 구매 금액</span><strong id="result-cost">100,000원</strong></div><div><span>예시 당첨금 · 세전</span><strong id="result-prize">0원</strong></div></div>
           <p id="result-detail-caption" class="result-detail-caption" hidden></p>
         </article>
         <div class="type-reading">
           <article class="type-card" id="type-card" tabindex="-1" aria-labelledby="type-title">
-            <div class="type-card-top"><span>나의 로또 운 유형</span><strong id="type-code">NORM</strong></div>
+            <div class="type-card-top"><span>오늘 뽑은 내 운 캐릭터</span><strong id="type-code">NORM</strong></div>
+            <div class="character-portrait"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><span class="character-number" id="character-number">01 / 16</span></div>
             <h2 id="type-title"></h2><p id="type-line" class="type-line"></p>
-            <div class="type-result-stamp"><span>최고 등수</span><strong id="type-rank"></strong></div>
+            <div class="loot-receipt"><span id="type-budget">10만원치 돌리고</span><strong id="type-loot">0원 건짐</strong><p id="type-reaction"></p></div>
+            <div class="type-result-stamp"><span id="type-wins">100게임 중 0게임 당첨</span><strong id="type-rank"></strong></div>
             <div class="type-stats"><div><span>구매 게임</span><strong id="type-games"></strong></div><div><span>추첨 횟수</span><strong id="type-rounds"></strong></div><div><span>예시 당첨금</span><strong id="type-prize"></strong></div></div>
           </article>
+          <section class="friend-challenge" id="friend-challenge" hidden aria-labelledby="challenge-title"><h3 id="challenge-title"></h3><p id="challenge-copy"></p><div id="challenge-scores" class="challenge-scores" hidden><div><span>친구</span><strong id="friend-prize"></strong></div><div><span>나</span><strong id="my-prize"></strong></div></div><button id="challenge-start" class="challenge-start" type="button">같은 금액으로 붙어보기 ↗</button></section>
+          <div class="result-actions"><button id="result-share" class="result-share" type="button">친구에게 도전장 보내기 <span aria-hidden="true">↗</span></button><button id="result-save" class="result-save" type="button">캐릭터 카드 저장</button><button id="result-again" class="result-again" type="button">다른 운도 뽑아보기</button></div>
+          <p id="share-nudge" class="share-nudge">내 결과를 보고, 친구는 새 운으로 도전해요.</p>
           <section class="type-explanation"><h3>내 운 풀이</h3><p id="type-explanation"></p><p id="type-facts" class="type-facts"></p></section>
-          <p class="type-friend">함께 비교해볼 친구 <strong id="type-friend"></strong></p>
-          <div class="result-actions"><button id="result-share" class="result-share" type="button">결과 공유하기</button><button id="result-save" class="result-save" type="button">이미지 저장</button><button id="result-again" class="result-again" type="button">새 번호로 다시 해보기</button></div>
+          <p class="type-friend">친구는 혹시 <strong id="type-friend"></strong>?</p>
+
         </div>
       </div>
       <details class="result-breakdown"><summary>전체 당첨 내역과 손익 보기 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="metrics" aria-label="실험 결과 요약"><div><span>실험한 게임</span><strong id="stat-games">0<small>게임</small></strong></div><div><span>가상 구매 비용</span><strong id="stat-cost">0<small>원</small></strong></div><div><span>예시 당첨금 · 세전</span><strong id="stat-prize">0<small>원</small></strong></div><div class="balance-metric"><span>가상 손익</span><strong id="stat-balance">0<small>원</small></strong></div></div>

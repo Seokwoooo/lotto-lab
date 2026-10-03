@@ -236,3 +236,125 @@ td small{font-size:12px;color:var(--muted);padding-left:4px}
 }
 @media(max-width:360px){.result-screen{padding-top:12px}.result-page-heading{margin-bottom:10px}.topbar{padding:13px 0}.official-logo{width:138px}.intro{padding:14px 0 12px}h1{font-size:26px}.intro-copy{font-size:13px}.purchase-ticket{padding:12px}.purchase-brand img{width:105px}.purchase-brand>span{font-size:12px}.purchase-heading h2{font-size:16px}.purchase-heading{margin-top:10px}.ticket-row{gap:5px;grid-template-columns:13px minmax(0,1fr) 28px;min-height:33px}.ticket-numbers{gap:2px}.ticket-numbers span{font-size:19px;height:29px}.ticket-row>strong{font-size:12px}.ticket-group{font-size:12px}.purchase-total{margin-top:7px;padding-top:9px}.reroll-button{margin-top:10px}.ball{font-size:13px}.result-ticket .ball{font-size:13px}.result-page-heading>p{font-size:12px}.result-ticket .winning-balls{gap:3px}.type-card{padding:20px 18px}.type-card h2{font-size:30px}.type-stats{gap:6px}.type-stats strong{font-size:14px}.type-stats span{font-size:12px}.type-card-top strong{font-size:20px}.presets button{font-size:12px}.control-row{gap:10px}.number-grid button{font-size:13px}.budget{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Original Lotto-ball characters, five moods in a 3 × 2 transparent sprite. */
+:root{--ink:#262c40;--muted:#737989;--paper:#fffaf0;--line:#e7e1d7;--yellow:#ffe34d;--blue:#1748d5}
+.page-width{width:min(1020px,calc(100% - 48px))}
+.topbar{border-bottom:1px solid #262c401a}
+.brand-caption{color:#62697a}
+.intro{position:relative;padding:36px 0 29px}
+.intro-eyebrow{font-size:13px;font-weight:650;color:#757367;margin-bottom:10px}
+.intro h1{font-size:48px;font-weight:900;line-height:1.17;letter-spacing:-1.9px}
+.intro h1>span{color:var(--blue)}
+.intro-copy{color:#676f80;font-size:16px;margin-top:12px}
+.hero-mascot{display:none!important}
+.lab-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;max-width:900px}
+.purchase-ticket{border-top:3px solid #262c40;border-radius:9px;box-shadow:0 6px 0 #e7e1d780;padding:24px}
+.purchase-heading h2{font-size:19px}
+.receipt-pager{display:flex;align-items:center;justify-content:center;gap:19px;margin-top:10px;min-height:34px}
+.receipt-pager button{display:grid;place-items:center;background:white;color:var(--ink);width:34px;height:32px;border:1px solid #dedfe3;border-radius:6px;padding:0;font-size:17px}
+.receipt-pager button:hover:not(:disabled){background:var(--yellow);border-color:var(--ink)}
+.receipt-pager button:disabled{opacity:.25}
+.receipt-pager span{font:700 12px var(--mono);color:var(--muted);min-width:67px;text-align:center}
+.reroll-button{border-radius:7px;background:#f5f7fd;border-color:#d8dfef;font-size:14px}
+.draw-intro{display:block;text-align:center}
+.mascot{display:block;flex-shrink:0;width:180px;aspect-ratio:1;background:url('./assets/lotto-mascots-sheet.png') no-repeat;background-size:300% 200%;background-position:0 0}
+.mascot-office{background-position:50% 0}
+.mascot-clover{background-position:100% 0}
+.mascot-pink{background-position:0 100%}
+.mascot-royal{background-position:50% 100%}
+.mascot-cast{display:flex;align-items:center;justify-content:center;gap:0}
+.cast-member{display:flex;align-items:center;flex-direction:column;min-width:0;position:relative}
+.cast-member:first-child{transform:rotate(-7deg) translateY(5px)}
+.cast-member:last-child{transform:rotate(7deg) translateY(-7px)}
+.cast-member .mascot{width:180px;filter:drop-shadow(0 7px 3px #262c4010)}
+.cast-speech{font-size:14px;font-weight:750;background:white;border:1.5px solid var(--ink);border-radius:12px 12px 12px 2px;padding:7px 12px;z-index:1}
+.draw-intro>p{font-size:17px;font-weight:750;color:var(--ink);margin:9px 0 0}
+.draw-actions{margin-top:22px}
+.start-button{background:var(--yellow);color:var(--ink);border:2px solid var(--ink);border-radius:12px;box-shadow:0 5px 0 var(--ink);min-height:61px;font-weight:850;font-size:19px;padding:13px 17px;justify-content:space-between;gap:10px;transition:transform .15s,box-shadow .15s}
+.start-button:hover{background:#ffdc27;transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
+.start-button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.button-arrow{display:grid;place-items:center;border-radius:50%;background:var(--ink);color:var(--yellow);font-size:22px;flex:0 0 31px;width:31px;height:31px}
+.draw-action-note{display:block!important;margin-top:15px;font-size:12px}
+.draw-stage.is-running .start-button .button-arrow{animation:spin-arrow 1s linear infinite}
+@keyframes spin-arrow{to{transform:rotate(360deg)}}
+.setup{max-width:900px;margin-top:33px}
+.shared-banner{background:#fff1b2;border:1px solid #edda82;border-radius:9px}
+.result-screen{padding-top:27px}
+.result-page-heading{margin-bottom:24px}
+.result-page-heading h1{font-size:24px;font-weight:750;letter-spacing:-.6px}
+.result-page-heading>p{font-size:13px;margin-top:5px}
+.result-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:38px;align-items:start}
+.type-reading{grid-column:1;grid-row:1}
+.result-ticket{grid-column:2;grid-row:1;position:sticky;top:24px}
+.type-card{border:1.5px solid #262c4020;border-radius:18px;padding:22px 25px 19px;text-align:center;color:var(--ink);box-shadow:0 6px 0 #262c4010;overflow:hidden}
+.type-card-top{font-size:12px;color:#454c61}
+.type-card-top strong{font:800 15px var(--mono);letter-spacing:1px;border:1px solid #262c4033;border-radius:5px;padding:3px 6px}
+.character-portrait{display:flex;justify-content:center;position:relative;height:216px;margin-top:4px}
+.character-portrait .mascot{width:216px;filter:drop-shadow(0 12px 6px #262c4015);animation:character-arrive .6s cubic-bezier(.21,.88,.28,1.3) both}
+.character-number{position:absolute;bottom:7px;right:5px;font:700 12px var(--mono);color:#555d70}
+@keyframes character-arrive{from{opacity:0;transform:translateY(18px) scale(.82) rotate(-8deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+.type-card h2{font-size:37px;line-height:1.16;letter-spacing:-1.35px;margin:10px 0 12px;font-weight:900;color:var(--ink)}
+.type-line{font-size:15px;font-weight:600;line-height:1.6;min-height:24px;color:#4b5268}
+.loot-receipt{background:#ffffffc4;border:1px solid #ffffffa6;border-radius:11px;padding:16px 10px 13px;margin-top:19px}
+.loot-receipt>span{display:block;font-size:14px;color:#626779;font-weight:600}
+.loot-receipt>strong{display:block;font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1.3;margin-top:3px;overflow-wrap:anywhere}
+.loot-receipt>p{font-size:14px;font-weight:650;color:#626779;margin-top:7px;word-break:keep-all}
+.type-result-stamp{border:0;font-size:12px;margin-top:12px;padding-top:0;color:#626779}
+.type-result-stamp strong{font-size:14px;color:var(--ink);letter-spacing:0}
+.type-stats{display:none}
+.type-explanation{margin-top:24px;padding-inline:3px}
+.type-explanation h3{font-size:15px;font-weight:800}
+.type-explanation>p{color:#596172;line-height:1.8;margin-top:8px;font-size:16px}
+.type-explanation .type-facts{font-size:13px;line-height:1.6;margin-top:12px}
+.type-friend{font-size:14px;color:#747989;padding-inline:3px;margin-top:18px;word-break:keep-all}
+.type-friend strong{font-size:14px;padding-left:3px}
+.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:22px}
+.result-actions button{border-radius:10px;font-size:15px;font-weight:750;min-height:48px}
+.result-share{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:12px 18px!important;background:var(--ink);border-color:var(--ink);color:white}
+.result-share>span{font-size:22px;color:var(--yellow)}
+.result-share:hover{background:#363e55}
+.result-save{border-color:#d9d5ca;color:var(--ink);background:white}
+.result-again{grid-column:auto;color:#636b7c;background:#eee9df;border:1px solid #eee9df!important;font-size:14px!important}
+.result-again:hover,.result-save:hover{background:#fff1b2}
+.share-nudge{text-align:center;color:var(--muted);font-size:12px;margin-top:9px}
+.friend-challenge{padding:19px;border:1.5px solid #e4d277;background:#fff2b7;border-radius:12px;margin-top:22px;word-break:keep-all}
+.friend-challenge h3{font-size:19px;line-height:1.4;letter-spacing:-.4px}
+.friend-challenge>p{font-size:14px;line-height:1.7;color:#716849;margin-top:7px}
+.challenge-start{width:100%;padding:12px 9px;background:var(--ink);color:white;border:0;border-radius:8px;font-size:16px;font-weight:750;margin-top:15px;min-height:48px}
+.challenge-scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.challenge-scores>div{background:#ffffff80;border-radius:7px;padding:12px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.challenge-scores span{font-size:12px;color:#716849}
+.challenge-scores strong{font-size:21px;font-weight:850;overflow-wrap:anywhere}
+.result-ticket .ticket-list{margin-top:17px}
+.result-ticket .receipt-pager{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:13px}
+.result-detail-caption{line-height:1.65}
+.result-breakdown{margin-top:36px}
+@media(max-width:900px){.lab-layout{gap:30px}.cast-member .mascot{width:150px}.result-layout{gap:25px}.type-card{padding:20px}.type-card h2{font-size:33px}.purchase-ticket{padding:21px}.character-portrait{height:195px}.character-portrait .mascot{width:195px}}
+@media(max-width:680px){
+ .page-width{width:calc(100% - 32px);max-width:480px}.topbar{padding:17px 0}.official-logo{width:150px}
+ .intro{text-align:left;padding:23px 107px 22px 0}.intro-eyebrow{font-size:12px;margin-bottom:8px;line-height:1.4}.intro h1{font-size:29px;letter-spacing:-1.1px;line-height:1.18}.intro-copy{font-size:13px;margin-top:9px;line-height:1.5}
+ .hero-mascot{display:block!important;position:absolute;right:-7px;top:26px;width:113px;transform:rotate(8deg);filter:drop-shadow(0 7px 2px #262c4010)}
+ .lab-layout{display:block}.purchase-ticket{padding:16px;border-radius:8px;box-shadow:0 4px 0 #e7e1d780}.purchase-heading h2{font-size:18px}
+ .ticket-list{margin-top:12px}.ticket-row{min-height:35px}.receipt-pager{margin-top:8px;min-height:30px;gap:23px}.receipt-pager button{height:30px;width:34px}.purchase-total{margin-top:9px}.reroll-button{margin-top:12px}
+ .draw-intro{display:none}.draw-actions{margin-top:17px}.start-button{border-radius:10px;min-height:56px;padding:12px 16px;font-size:18px}.button-arrow{font-size:20px;width:29px;height:29px;flex-basis:29px}.draw-action-note{margin-top:12px;font-size:12px}
+ .setup{margin-top:20px}.odds-note{margin:19px 0}.shared-banner{font-size:13px;word-break:keep-all}
+ .result-screen{padding-top:20px}.result-page-heading{margin-bottom:16px}.result-page-heading h1{font-size:21px}.result-page-heading>p{font-size:12px}
+ .result-layout{display:flex;flex-direction:column;gap:27px}.type-reading{order:0}.result-ticket{order:1;position:static;width:100%}.type-card{padding:18px 23px;border-radius:15px}.type-card-top>span{font-size:12px}.type-card-top strong{font-size:13px}
+ .character-portrait{height:181px;margin-top:0}.character-portrait .mascot{width:181px}.character-number{bottom:8px;font-size:12px}
+ .type-card h2{font-size:33px;margin:7px 0 10px;letter-spacing:-1px}.type-line{font-size:14px;line-height:1.55}.loot-receipt{margin-top:16px;padding:13px 9px 12px}.loot-receipt>strong{font-size:30px}.loot-receipt>span,.loot-receipt>p{font-size:13px}.type-result-stamp{font-size:12px;margin-top:10px}.type-result-stamp strong{font-size:13px}
+ .type-explanation{margin-top:21px}.type-explanation>p{font-size:16px}.type-friend{margin-top:15px}.result-actions{margin-top:20px}.result-actions button{font-size:15px}.result-again{font-size:14px!important}.result-share{min-height:51px!important}.friend-challenge{padding:17px}.friend-challenge h3{font-size:18px}
+ .result-ticket .ticket-list{margin-top:14px}.result-ticket .winning-balls{margin-bottom:14px}.result-ticket .receipt-pager{padding-bottom:11px}.result-total{margin-top:15px}.footer{padding-block:22px}
+}
+@media(max-width:360px){
+ .topbar{padding:12px 0}.official-logo{width:138px}.intro{padding:17px 89px 17px 0}.intro h1{font-size:25px;letter-spacing:-.9px}.intro-eyebrow{font-size:12px;margin-bottom:7px}.intro-copy{font-size:12px;margin-top:7px}.hero-mascot{width:98px;right:-7px;top:25px}
+ .purchase-ticket{padding:12px}.purchase-heading h2{font-size:16px}.ticket-row{min-height:31px}.ticket-list{margin-top:9px}.ticket-group{margin-bottom:4px;padding-bottom:5px}.ticket-numbers span{font-size:19px;height:28px}.receipt-pager{margin-top:6px;height:28px;min-height:28px}.receipt-pager button{height:28px}.purchase-total{padding-top:8px;margin-top:7px}.reroll-button{margin-top:10px;min-height:42px}.start-button{font-size:16px;min-height:52px;padding:10px 12px}.draw-actions{margin-top:15px}.draw-action-note{font-size:12px}
+ .type-card{padding:17px 17px 16px}.type-card h2{font-size:29px}.character-portrait{height:161px}.character-portrait .mascot{width:161px}.loot-receipt>strong{font-size:27px}.result-page-heading h1{font-size:19px}.result-screen{padding-top:15px}.result-actions button{font-size:14px}.result-again{font-size:13px!important}
+}
+@media(max-width:360px){
+ .intro{padding-top:14px;padding-bottom:14px}.intro-eyebrow,.intro-copy{display:none}.hero-mascot{width:82px;top:3px;right:-2px}.ticket-row{min-height:30px}.ticket-numbers span{height:28px}.reroll-button{min-height:40px}.draw-action-note{line-height:1.5}
+}
+@media(max-width:360px){
+ .topbar{padding-block:11px}.intro{padding-top:12px;padding-bottom:12px}.purchase-ticket{padding:10px}.result-page-heading{display:none}.character-portrait{height:112px}.character-portrait .mascot{width:112px}.type-card{padding:14px}.loot-receipt>p{display:none}
+}
+@media(max-width:360px){.draw-actions{margin-top:10px}}

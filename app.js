@@ -5,8 +5,10 @@ const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('ko-KR');
 const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
-const state = { worker: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null };
+const state = { worker: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, showingFriend: false, challenge: null };
 const text = (id, value) => { $(id).textContent = value; };
+const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
+const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
 
 function freshSeed() {
   const words = crypto.getRandomValues(new Uint32Array(4));
@@ -33,11 +35,15 @@ function updateSettings() {
   text('mode-hint', mode === 'auto' ? '자동으로 매번 새로운 번호를 구매합니다.' : '아래에서 6개 번호를 골라 고정하세요.');
   text('slip-mode', mode === 'auto' ? '자동 미리보기' : '수동 · 고정 번호');
   $('number-grid').classList.toggle('auto-preview', mode === 'auto');
-  text('start-label', rounds === 1 ? `이 ${tickets}게임 추첨하기` : `${format.format(rounds)}회 연속 추첨`);
+  text('start-label', valid ? drawLabel(rounds * tickets, rounds) : '내 운 돌려보기');
   text('settings-summary', `${mode === 'auto' ? '자동' : '수동'} · ${tickets}게임 · ${format.format(rounds)}회`);
   $('number-picker').hidden = mode === 'auto';
   $('single-draw').hidden = rounds === 1;
-  text('draw-action-note', rounds === 1 ? '당첨번호 6개 + 보너스 1개를 뽑아 대조합니다.' : `회차마다 당첨번호를 새로 뽑고 ${tickets}게임씩 구매합니다.`);
+  text('draw-action-note', rounds === 1 ? `실제 지출 0원 · 당첨번호 한 세트에 ${tickets}게임 대조` : `실제 지출 0원 · ${format.format(rounds)}회 추첨, 회차마다 ${tickets}게임`);
+  text('page-title', `${valid ? budgetLabel(rounds * tickets) : '로또'} 사면,`);
+  const accent = document.createElement('span'); accent.textContent = '내 운은 어떨까?';
+  $('page-title').append(document.createElement('br'), accent);
+  document.querySelector('.intro-eyebrow').textContent = `${valid ? format.format(rounds * tickets) : '내'}게임. ${rounds === 1 ? '한 번의 추첨.' : `${format.format(rounds)}번의 추첨.`} 내 운의 정체.`;
   if (!state.result) {
     headline(`내 복권 ${tickets}게임,`, '당첨될까?');
     text('result-description', rounds === 1 ? '구매 영수증의 번호에 당첨번호 한 세트를 대조합니다.' : `${format.format(rounds)}회 연속 추첨 · 회차마다 ${tickets}게임 · ${mode === 'auto' ? '매번 자동' : '같은 번호로'}`);
@@ -66,6 +72,7 @@ function preparePurchase() {
   } catch {
     state.purchase = null;
     $('ticket-list').replaceChildren();
+    $('ticket-pager').hidden = true;
     text('purchase-status', '설정 확인'); $('purchase-caption').hidden = false;
     text('purchase-caption', currentMode() === 'fixed' ? '서로 다른 번호 6개를 마킹하면 복권을 발행합니다.' : '횟수와 게임 수를 확인해주세요.');
     text('ticket-count', '—'); text('ticket-cost', '—');
@@ -75,6 +82,7 @@ function preparePurchase() {
 function resetExperiment() {
   state.purchase = null;
   state.result = null;
+  state.purchasePage = 0; state.resultPage = 0;
   for (const id of ['stat-games', 'stat-cost', 'stat-prize', 'stat-balance']) metric(id, 0, id === 'stat-games' ? '게임' : '원');
   for (let rank = 0; rank <= 5; rank++) {
     text(`rank-${rank}`, '0'); document.querySelector(`[data-rank="${rank}"]`)?.classList.remove('has-win');
@@ -94,7 +102,12 @@ function resetExperiment() {
   $('winning-balls').replaceChildren(balls); $('winning-balls').setAttribute('aria-label', '추첨 대기');
 }
 
-function changePurchase() { discardReplay(); resetExperiment(); updateSettings(); }
+function changePurchase() {
+  if (state.challenge && (Number($('rounds').value) * Number($('tickets').value) !== state.challenge.games || Number($('rounds').value) !== state.challenge.rounds)) {
+    state.challenge = null; $('shared-banner').hidden = true;
+  }
+  discardReplay(); resetExperiment(); updateSettings();
+}
 
 function select(button, active) { button.classList.toggle('selected', active); button.setAttribute('aria-pressed', String(active)); }
 function unit(value) { const el = document.createElement('small'); el.textContent = value; return el; }
@@ -145,7 +158,7 @@ document.querySelectorAll('[data-rounds], [data-tickets]').forEach(button => but
   $(key).value = button.dataset[key]; changePurchase();
 }));
 document.querySelectorAll('#rounds, #tickets, input[name="mode"]').forEach(input => input.addEventListener('input', changePurchase));
-$('own-challenge').addEventListener('click', () => { changePurchase(); toast('같은 설정, 새로운 운으로 시작합니다.'); });
+$('own-challenge').addEventListener('click', () => { state.showingFriend = false; changePurchase(); toast('같은 설정, 새로운 운으로 시작합니다.'); });
 $('new-purchase').addEventListener('click', () => {
   document.querySelector('input[name="mode"][value="auto"]').checked = true;
   changePurchase();
@@ -176,6 +189,7 @@ function start(overrideRounds) {
   $('settings').disabled = true; $('stop-button').hidden = false; $('stop-button').disabled = false;
   $('start-button').disabled = true; $('single-draw').disabled = true;
   $('new-purchase').disabled = true;
+  for (const id of ['ticket-prev', 'ticket-next']) $(id).disabled = true;
   text('stop-button', '여기서 멈추기');
   $('result-share').disabled = true; $('result-save').disabled = true;
   $('draw-stage').classList.add('is-running');
@@ -209,7 +223,8 @@ function finish() {
   $('new-purchase').disabled = false;
   $('draw-stage').classList.remove('is-running');
   $('result-share').disabled = !state.result?.games; $('result-save').disabled = !state.result?.games;
-  state.purchase = null;
+  if (state.purchase && !state.result) renderTicketPage(state.purchase.last, state.purchase.config, false, 'ticket-list', state.purchasePage);
+  if (state.result) state.purchase = null;
   if (state.result) {
     text('start-label', Number($('rounds').value) === 1 ? '새 추첨으로 한 번 더' : `${format.format(Number($('rounds').value))}회 다시 추첨`);
     text('draw-action-note', currentMode() === 'auto' ? '다시 추첨하면 새 자동 번호로 구매합니다.' : '다시 추첨하면 같은 구매 번호로 새 당첨번호를 뽑습니다.');
@@ -268,17 +283,20 @@ function renderBalls(last, animate) {
   $('winning-balls').setAttribute('aria-label', `당첨번호 ${last.winning.join(', ')}. 보너스 번호 ${last.bonus}.`);
 }
 
-function renderTickets(last, config, checked = true) {
-  if (!last) return;
+function renderTicketPage(last, config, checked, target, page) {
+  const pages = Math.ceil(last.tickets.length / 5);
+  const prefix = target === 'ticket-list' ? 'ticket' : 'result-ticket';
+  page = Math.max(0, Math.min(page, pages - 1));
+  if (prefix === 'ticket') state.purchasePage = page;
+  else state.resultPage = page;
   const fragment = document.createDocumentFragment();
-  last.tickets.forEach((ticket, i) => {
-    if (i % 5 === 0) {
-      const group = document.createElement('div'); group.className = 'ticket-group';
-      group.textContent = `복권 ${Math.floor(i / 5) + 1} · ${Math.min(5, last.tickets.length - i)}게임 · ${config.mode === 'fixed' ? '수동' : '자동'}`;
-      fragment.append(group);
-    }
-    const row = document.createElement('div'); row.className = 'ticket-row';
-    const index = document.createElement('span'); index.textContent = 'ABCDE'[i % 5];
+  const group = document.createElement('div'); group.className = 'ticket-group';
+  group.textContent = `영수증 ${String(page + 1).padStart(2, '0')} · ${page * 5 + 1}~${Math.min(page * 5 + 5, last.tickets.length)}번째 게임 · ${config.mode === 'fixed' ? '수동' : '자동'}`;
+  fragment.append(group);
+  last.tickets.slice(page * 5, page * 5 + 5).forEach((ticket, offset) => {
+    const i = page * 5 + offset;
+    const row = document.createElement('div'); row.className = 'ticket-row'; row.dataset.game = i + 1;
+    const index = document.createElement('span'); index.textContent = 'ABCDE'[offset];
     const numbers = document.createElement('div'); numbers.className = 'ticket-numbers';
     ticket.numbers.forEach(n => {
       const el = document.createElement('span'); el.textContent = String(n).padStart(2, '0');
@@ -290,19 +308,74 @@ function renderTickets(last, config, checked = true) {
     if (checked && ticket.rank) rank.className = 'won';
     row.append(index, numbers, rank); fragment.append(row);
   });
-  $('ticket-list').replaceChildren(fragment);
+  $(target).replaceChildren(fragment);
+  $(`${prefix}-pager`).hidden = pages <= 1;
+  text(`${prefix}-page`, `${page + 1} / ${pages}장`);
+  $(`${prefix}-prev`).disabled = page === 0 || Boolean(state.worker);
+  $(`${prefix}-next`).disabled = page === pages - 1 || Boolean(state.worker);
+}
+
+for (const [prefix, target, checked] of [['ticket', 'ticket-list', false], ['result-ticket', 'result-ticket-list', true]]) {
+  for (const [direction, delta] of [['prev', -1], ['next', 1]]) {
+    $(`${prefix}-${direction}`).addEventListener('click', () => {
+      const data = checked ? state.result : state.purchase;
+      if (!data || state.worker) return;
+      const page = checked ? state.resultPage : state.purchasePage;
+      renderTicketPage(data.last, data.config, checked, target, page + delta);
+    });
+  }
+}
+
+function renderTickets(last, config, checked = true) {
+  if (!last) return;
+  renderTicketPage(last, config, checked, 'ticket-list', state.purchasePage);
   text('ticket-count', `${config.tickets}게임`);
   text('ticket-cost', currency(config.tickets * 1000));
   text('purchase-status', checked ? '당첨 확인 완료' : '추첨 대기');
   $('purchase-caption').hidden = config.rounds === 1;
-  text('purchase-caption', checked ? `이 영수증은 ${format.format(last.round)}회차의 구매 번호입니다.${config.rounds > 1 ? ' 누적 결과는 성적표에서 확인하세요.' : ''}` : config.rounds === 1 ? `아래 ${config.tickets}게임으로 한 번 추첨합니다.` : `첫 회차의 구매 번호입니다. ${config.mode === 'auto' ? '회차마다 새 자동 번호로 구매합니다.' : '같은 구매 번호로 당첨번호만 새로 뽑습니다.'}`);
+  text('purchase-caption', checked ? `이 영수증은 ${format.format(last.round)}회차의 구매 번호입니다. 누적 결과는 성적표에서 확인하세요.` : `첫 회차 구매 번호. ${config.mode === 'auto' ? '회차마다 새 자동 번호를 구매합니다.' : '같은 번호로 당첨번호만 새로 뽑습니다.'}`);
   $('purchase-ticket').classList.toggle('is-checked', checked);
+}
+
+function highlightReceipt(last) {
+  let bestIndex = 0, bestScore = -1;
+  last.tickets.forEach((ticket, i) => {
+    const score = ticket.rank ? (7 - ticket.rank) * 100 : ticket.matches * 10 + Number(ticket.bonusMatch);
+    if (score > bestScore) { bestScore = score; bestIndex = i; }
+  });
+  return Math.floor(bestIndex / 5);
+}
+
+function showChallenge(result) {
+  const incoming = state.showingFriend;
+  $('friend-challenge').hidden = !incoming && !state.challenge;
+  $('challenge-scores').hidden = incoming || !state.challenge;
+  $('challenge-start').hidden = !incoming;
+  $('result-share').hidden = incoming;
+  $('share-nudge').hidden = incoming;
+  if (incoming) {
+    text('challenge-title', '이 정도 운이면, 내가 이길 수 있지?');
+    text('challenge-copy', `친구는 ${budgetLabel(result.games)} 돌리고 ${currency(result.prize)}을 건졌어요. 같은 설정, 새로운 추첨으로 붙어보세요.`);
+    text('challenge-start', `나도 ${budgetLabel(result.games)} 돌려보기 ↗`);
+  } else if (state.challenge) {
+    const delta = result.prize - state.challenge.prize;
+    text('challenge-title', delta > 0 ? '이번 판은 내 승리!' : delta < 0 ? '친구가 한 수 위였네…' : '우리, 운까지 닮았네?');
+    text('challenge-copy', `각자의 가상 당첨금으로 비교했어요. ${delta > 0 ? `내가 ${currency(delta)} 더 건졌어요.` : delta < 0 ? `친구가 ${currency(-delta)} 더 건졌어요.` : '당첨금이 똑같아요. 다음 판은 누가 웃을까?'}`);
+    text('friend-prize', currency(state.challenge.prize)); text('my-prize', currency(result.prize));
+  }
 }
 
 function showResultScreen(push = true) {
   if (!state.result) return;
   const result = state.result, profile = getProfile(result);
   text('type-code', profile.code); text('type-title', profile.title); text('type-line', profile.line);
+  $('type-character').className = `mascot mascot-${profile.character}`;
+  $('type-character').setAttribute('aria-label', `${profile.title.replaceAll('\n', ' ')} 캐릭터`);
+  text('character-number', `${String(profile.number).padStart(2, '0')} / 16`);
+  text('type-budget', `${budgetLabel(result.games)} 돌리고`); text('type-loot', `${currency(result.prize)} 건짐`);
+  text('type-reaction', profile.reaction); text('type-wins', `${format.format(result.games)}게임 중 ${format.format(profile.wins)}게임 당첨`);
+  text('result-page-title', state.showingFriend ? '친구가 뽑은 운, 이 정도였어요.' : `${budgetLabel(result.games)} 돌린 내 운은…`);
+  text('result-page-subtitle', state.showingFriend ? '친구의 추첨 결과를 그대로 재현했어요.' : '오늘의 영수증에 붙은 별명 하나.');
   text('type-rank', profile.rank ? `${profile.rank}등` : '당첨 없음');
   text('type-games', `${format.format(result.games)}게임`); text('type-rounds', `${format.format(result.rounds)}회`);
   text('type-prize', currency(result.prize));
@@ -310,19 +383,22 @@ function showResultScreen(push = true) {
   text('type-explanation', profile.description);
   text('type-facts', `${format.format(result.games)}게임 중 ${format.format(profile.wins)}게임 당첨. 가상 손익 ${currency(profile.balance)}.`);
   text('type-friend', profile.friend);
-  text('result-again', result.config.mode === 'auto' ? '새 번호로 다시 해보기' : '같은 번호로 다시 추첨');
+  text('result-again', state.showingFriend ? '구매 번호 먼저 보고 도전하기' : '다른 운도 뽑아보기');
   text('type-draw-label', result.rounds === 1 ? '당첨번호 · 마지막 공은 보너스' : `마지막 ${format.format(result.rounds)}회차 당첨번호 · 보너스`);
   text('result-detail-caption', result.rounds === 1 ? `${result.config.tickets}게임의 구매 번호와 당첨 결과입니다.` : `전체 ${format.format(result.rounds)}회 중 마지막 회차의 ${result.config.tickets}게임입니다. 위의 등수와 당첨금은 전체 회차를 합한 결과입니다.`);
-  $('result-detail-caption').hidden = result.rounds === 1;
+  $('result-detail-caption').hidden = false;
+  if (result.rounds === 1) text('result-detail-caption', `${result.config.tickets}게임 전부 추첨했어요. 가장 잘 맞힌 게임이 있는 영수증부터 보여드려요.`);
   $('type-card').style.setProperty('--type-paper', profile.color);
   $('result-balls').replaceChildren(...Array.from($('winning-balls').children, child => {
     const copy = child.cloneNode(true); copy.classList.remove('revealed'); return copy;
   }));
   $('result-balls').setAttribute('aria-label', $('winning-balls').getAttribute('aria-label'));
-  $('result-ticket-list').replaceChildren(...Array.from($('ticket-list').children, child => child.cloneNode(true)));
+  state.resultPage = highlightReceipt(result.last);
+  renderTicketPage(result.last, result.config, true, 'result-ticket-list', state.resultPage);
+  showChallenge(result);
   $('simulator-screen').hidden = true; $('result-screen').hidden = false;
   document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
-  if (push && location.href !== shareUrl(result)) history.pushState({ view: 'result' }, '', shareUrl(result));
+  if (push && location.href !== shareUrl(result, state.showingFriend)) history.pushState({ view: 'result' }, '', shareUrl(result, state.showingFriend));
   window.scrollTo({ top: 0, behavior: 'instant' });
   $('result-page-title').setAttribute('tabindex', '-1');
   $('result-page-title').focus({ preventScroll: true });
@@ -330,37 +406,53 @@ function showResultScreen(push = true) {
 
 function showSimulator(fresh = false) {
   $('simulator-screen').hidden = false; $('result-screen').hidden = true;
-  document.title = '로또랩 — 본인의 운을 테스트해보세요!';
+  document.title = '로또랩 — 10만원치 돌려본 내 운은?';
   if (fresh) {
     history.pushState(null, '', location.pathname); changePurchase();
   }
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-$('result-again').addEventListener('click', () => showSimulator(true));
+function acceptChallenge(immediate) {
+  if (!state.result) return;
+  state.challenge = { prize: state.result.prize, games: state.result.games, rounds: state.result.rounds };
+  state.showingFriend = false;
+  showSimulator(true);
+  $('shared-banner').hidden = false;
+  $('shared-banner').querySelector('span').textContent = `친구는 ${currency(state.challenge.prize)}. 이번엔 내 운을 꺼내볼 차례!`;
+  $('own-challenge').hidden = true;
+  if (immediate) start();
+}
+$('challenge-start').addEventListener('click', () => acceptChallenge(true));
+$('result-again').addEventListener('click', () => {
+  if (state.showingFriend) { acceptChallenge(false); return; }
+  state.challenge = null; $('shared-banner').hidden = true;
+  showSimulator(true);
+});
 window.addEventListener('popstate', () => {
   if (location.hash !== '#result') { showSimulator(); return; }
   const params = new URLSearchParams(location.search);
-  if (state.result && params.get('s') === state.result.config.seed && Number(params.get('r')) === state.result.rounds) showResultScreen(false);
+  if (state.result && params.get('s') === state.result.config.seed && Number(params.get('r')) === state.result.rounds) { state.showingFriend = params.get('c') === '1'; showResultScreen(false); }
   else if (!state.worker) { restoreSharedExperiment(); resetExperiment(); updateSettings(); start(); }
 });
 
-function shareUrl(result) {
+function shareUrl(result, challenge = false) {
   const url = new URL(location.href); url.search = ''; url.hash = 'result';
   const { config, rounds } = result;
   for (const [key, value] of Object.entries({ v: VERSION, r: rounds, g: config.tickets, m: config.mode === 'fixed' ? 'f' : 'a', s: config.seed })) url.searchParams.set(key, value);
   if (config.mode === 'fixed') url.searchParams.set('n', config.fixed.join(','));
+  if (challenge) url.searchParams.set('c', '1');
   return url.toString();
 }
 
 function shareText(result) {
   const profile = getProfile(result);
-  return `내 로또 유형은 「${profile.title.replaceAll('\n', ' ')}」 ${profile.code}\n“${profile.line}”\n${format.format(result.games)}게임 · ${profile.rank ? `최고 ${profile.rank}등` : '당첨 없음'}. 실제로 쓴 돈은 0원. 너는 어떤 유형? #로또랩`;
+  return `${budgetLabel(result.games)} 돌리고 ${currency(result.prize)} 건짐.\n내 운은 「${profile.title.replaceAll('\n', ' ')}」\n“${profile.line}”\n너 이거 이길 수 있어? 같은 금액으로 붙어보자. 실제 지출은 0원! #로또랩`;
 }
 
 $('result-share').addEventListener('click', async () => {
   if (!state.result) return;
-  const payload = { title: '내 로또 유형 · 로또랩', text: shareText(state.result), url: shareUrl(state.result) };
+  const payload = { title: '내 로또 유형 · 로또랩', text: shareText(state.result), url: shareUrl(state.result, true) };
   if (navigator.share) {
     try { await navigator.share(payload); return; }
     catch (error) { if (error.name === 'AbortError') return; }
@@ -389,52 +481,43 @@ $('result-save').addEventListener('click', async () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas unavailable');
     ctx.fillStyle = profile.color; ctx.fillRect(0, 0, 1080, 1440);
-    ctx.fillStyle = '#172d66'; ctx.lineWidth = 4; ctx.strokeStyle = '#172d66'; ctx.strokeRect(35, 35, 1010, 1290);
+    const ink = '#262c40';
+    const fit = (value, size, width, weight = 850) => {
+      ctx.font = `${weight} ${size}px Pretendard, sans-serif`;
+      while (ctx.measureText(value).width > width && size > 20) { size--; ctx.font = `${weight} ${size}px Pretendard, sans-serif`; }
+      return size;
+    };
     const logo = new Image(); logo.src = new URL('./assets/lotto-official.svg', import.meta.url).href;
-    await logo.decode(); ctx.fillStyle = '#fff'; ctx.fillRect(80, 78, 320, 86); ctx.drawImage(logo, 98, 90, 284, 59);
-    ctx.fillStyle = '#172d66'; ctx.textAlign = 'right'; ctx.font = '900 54px Manrope, sans-serif'; ctx.fillText(profile.code, 1000, 139);
-    ctx.textAlign = 'left'; ctx.font = '800 27px Pretendard, sans-serif'; ctx.fillText('나의 로또 운 유형', 80, 224);
+    const sheet = new Image(); sheet.src = new URL('./assets/lotto-mascots-sheet.png', import.meta.url).href;
+    await Promise.all([logo.decode(), sheet.decode()]);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(56, 45, 267, 76, 12); ctx.fill();
+    ctx.drawImage(logo, 74, 62, 232, 48);
+    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = '750 25px Pretendard, sans-serif'; ctx.fillText('나의 로또 운 캐릭터', 1018, 77);
+    ctx.font = '800 25px Manrope, sans-serif'; ctx.fillText(`${profile.code} · ${String(profile.number).padStart(2, '0')} / 16`, 1018, 111);
+    const cells = { warm: [0, 0], office: [1, 0], clover: [2, 0], pink: [0, 1], royal: [1, 1] };
+    const [column, row] = cells[profile.character];
+    const cellWidth = sheet.naturalWidth / 3, cellHeight = sheet.naturalHeight / 2;
+    ctx.drawImage(sheet, column * cellWidth, row * cellHeight, cellWidth, cellHeight, 320, 129, 440, 440);
+    ctx.fillStyle = ink; ctx.textAlign = 'center';
     const titles = profile.title.split('\n');
-    let titleSize = 112;
-    const titleFont = () => { ctx.font = `900 ${titleSize}px Pretendard, sans-serif`; };
-    titleFont();
-    while (Math.max(...titles.map(title => ctx.measureText(title).width)) > 920 && titleSize > 55) { titleSize--; titleFont(); }
-    titles.forEach((line, i) => ctx.fillText(line, 80, 360 + i * titleSize * 1.18));
-    ctx.font = '650 34px Pretendard, sans-serif';
-    const quoteLines = []; let quoteLine = '';
-    for (const character of profile.line) {
-      if (ctx.measureText(quoteLine + character).width > 890) { quoteLines.push(quoteLine); quoteLine = ''; }
-      quoteLine += character;
-    }
-    quoteLines.push(quoteLine);
-    quoteLines.forEach((line, i) => ctx.fillText(line, 80, 555 + i * 46));
-    ctx.fillStyle = '#172d66'; ctx.fillRect(80, 645, 920, 135);
-    ctx.fillStyle = profile.color; ctx.font = '600 27px Pretendard, sans-serif'; ctx.fillText('이번 실험의 최고 등수', 106, 689);
-    ctx.font = '900 54px Pretendard, sans-serif'; ctx.fillText(profile.rank ? `${profile.rank}등` : '당첨 없음', 106, 748);
-    const stats = [['실험한 게임', `${format.format(result.games)}게임`], ['추첨 횟수', `${format.format(result.rounds)}회`], ['예시 당첨금 · 세전', currency(result.prize)]];
-    ctx.fillStyle = '#172d66';
-    stats.forEach(([label, value], i) => {
-      const x = 80 + i * 310;
-      ctx.font = '600 25px Pretendard, sans-serif'; ctx.fillText(label, x, 850);
-      let size = 41; ctx.font = `900 ${size}px Pretendard, sans-serif`;
-      while (ctx.measureText(value).width > 290 && size > 20) { size--; ctx.font = `900 ${size}px Pretendard, sans-serif`; }
-      ctx.fillText(value, x, 913);
-    });
-    ctx.font = '600 24px Pretendard, sans-serif'; ctx.fillText(result.rounds === 1 ? '이번 당첨번호 · 마지막 공은 보너스' : '마지막 회차 당첨번호 · 마지막 공은 보너스', 80, 1000);
-    const numbers = [...result.last.winning, result.last.bonus];
-    numbers.forEach((n, i) => {
-      const x = 170 + i * 110 + (i === 6 ? 24 : 0), y = 1080;
-      if (i === 6) { ctx.fillStyle = '#172d66'; ctx.font = '600 28px Manrope, sans-serif'; ctx.fillText('+', x - 68, y + 9); }
-      ctx.fillStyle = n <= 10 ? '#f6ca38' : n <= 20 ? '#45bced' : n <= 30 ? '#f57182' : n <= 40 ? '#a6b4c9' : '#9bd666';
-      ctx.beginPath(); ctx.arc(x, y, 43, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x, y, 23, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#23334e'; ctx.textAlign = 'center'; ctx.font = '900 29px Manrope, sans-serif'; ctx.fillText(n, x, y + 10); ctx.textAlign = 'left';
-    });
-    ctx.font = '600 24px Pretendard, sans-serif'; ctx.fillText('한 게임의 1등 확률 8,145,060분의 1 · 1~3등은 예시 금액', 80, 1200);
-    ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('이번 가상 추첨으로 보는 재미있는 별명 · 비공식 무료 시뮬레이터', 80, 1253);
-    ctx.fillStyle = '#172d66'; ctx.fillRect(0, 1325, 1080, 115);
-    ctx.fillStyle = '#fff'; ctx.font = '850 43px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 80, 1396);
-    ctx.font = '700 27px Manrope, sans-serif'; ctx.textAlign = 'right'; ctx.fillText('lucianlabs.dev/lotto', 1000, 1396);
+    let titleSize = 88;
+    for (const title of titles) titleSize = Math.min(titleSize, fit(title, titleSize, 948, 900));
+    ctx.font = `900 ${titleSize}px Pretendard, sans-serif`;
+    titles.forEach((line, i) => ctx.fillText(line, 540, 644 + i * titleSize * 1.14));
+    ctx.fillStyle = '#535b70'; fit(`“${profile.line}”`, 33, 930, 650); ctx.fillText(`“${profile.line}”`, 540, 814);
+    ctx.fillStyle = '#ffffffcd'; ctx.beginPath(); ctx.roundRect(56, 866, 968, 248, 24); ctx.fill();
+    ctx.fillStyle = '#626779'; ctx.font = '650 30px Pretendard, sans-serif'; ctx.fillText(`${budgetLabel(result.games)} 돌리고`, 540, 927);
+    ctx.fillStyle = ink; fit(`${currency(result.prize)} 건짐`, 72, 898, 900); ctx.fillText(`${currency(result.prize)} 건짐`, 540, 1016);
+    ctx.fillStyle = '#626779'; fit(profile.reaction, 29, 896, 650); ctx.fillText(profile.reaction, 540, 1072);
+    ctx.fillStyle = ink;
+    const summary = `${format.format(result.games)}게임 · ${profile.rank ? `최고 ${profile.rank}등` : '당첨 없음'} · ${format.format(profile.wins)}게임 당첨`;
+    fit(summary, 29, 960, 700); ctx.fillText(summary, 540, 1171);
+    ctx.font = '800 29px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 540, 1230);
+    ctx.fillStyle = '#626779'; ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('가상 추첨 · 1~3등은 세전 예시 금액 · 재미로 붙인 별명', 540, 1277);
+    ctx.fillText('한 게임의 1등 확률 8,145,060분의 1', 540, 1311);
+    ctx.fillStyle = ink; ctx.fillRect(0, 1340, 1080, 100);
+    ctx.fillStyle = '#ffe34d'; ctx.textAlign = 'left'; ctx.font = '850 34px Pretendard, sans-serif'; ctx.fillText('너 이거 이길 수 있어?', 57, 1402);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.font = '700 24px Manrope, sans-serif'; ctx.fillText('lucianlabs.dev/lotto', 1022, 1402);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('Image export unavailable');
     const file = new File([blob], `lottolab-${profile.code.toLowerCase()}.png`, { type: 'image/png' });
@@ -458,7 +541,9 @@ function restoreSharedExperiment() {
     $('rounds').value = config.rounds; $('tickets').value = config.tickets;
     document.querySelector(`input[name="mode"][value="${config.mode}"]`).checked = true;
     state.picks = new Set(config.fixed); state.seed = config.seed;
-    $('shared-banner').hidden = false; renderPicks();
+    state.showingFriend = params.get('c') === '1'; state.challenge = null;
+    $('shared-banner').hidden = false; $('own-challenge').hidden = false;
+    $('shared-banner').querySelector('span').textContent = '친구가 공유한 번호와 추첨입니다.'; renderPicks();
   } catch { toast('이 공유 링크는 재현할 수 없어요. 새 실험을 시작해보세요.'); }
 }
 
