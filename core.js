@@ -8,7 +8,7 @@ export const PRIZES = Object.freeze([0, 2_000_000_000, 50_000_000, 1_500_000, 50
 export function validateConfig(input) {
   const { rounds, tickets, mode, seed, fixed = [] } = input;
   if (!Number.isInteger(rounds) || rounds < 1 || rounds > 100_000) throw new Error('추첨 횟수는 1~100,000 사이의 정수로 입력해주세요.');
-  if (!Number.isInteger(tickets) || tickets < 1 || tickets > 100) throw new Error('구매 장수는 1~100 사이의 정수로 입력해주세요.');
+  if (!Number.isInteger(tickets) || tickets < 1 || tickets > 1000) throw new Error('회차당 구매 게임은 1~1,000 사이의 정수로 입력해주세요.');
   if (rounds * tickets > MAX_GAMES) throw new Error('한 번의 실험은 최대 100만 장입니다. 횟수나 장수를 줄여주세요.');
   if (!['auto', 'fixed'].includes(mode)) throw new Error('번호 선택 방식을 확인해주세요.');
   if (typeof seed !== 'string' || !/^[0-9a-f]{32}$/.test(seed) || /^0+$/.test(seed)) throw new Error('실험 시드가 올바르지 않습니다. 새 실험을 시작해주세요.');

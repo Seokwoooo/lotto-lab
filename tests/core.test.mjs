@@ -26,12 +26,13 @@ test('uses the exact combination count and stable cumulative probabilities', () 
 });
 
 test('rejects invalid or excessive work and duplicate fixed numbers', () => {
-  for (const change of [{ rounds: 0 }, { rounds: 1.5 }, { rounds: 100001 }, { tickets: 0 }, { tickets: 101 }, { rounds: 100000, tickets: 11 }, { mode: 'unknown' }, { seed: 'bad' }]) {
+  for (const change of [{ rounds: 0 }, { rounds: 1.5 }, { rounds: 100001 }, { tickets: 0 }, { tickets: 1001 }, { rounds: 1001, tickets: 1000 }, { rounds: 100000, tickets: 11 }, { mode: 'unknown' }, { seed: 'bad' }]) {
     assert.throws(() => validateConfig({ ...config, ...change }));
   }
   assert.throws(() => validateConfig({ ...config, mode: 'fixed', fixed: [1, 1, 2, 3, 4, 5] }));
   assert.throws(() => validateConfig({ ...config, mode: 'fixed', fixed: [1, 2, 3, 4, 5, 46] }));
   assert.doesNotThrow(() => validateConfig({ ...config, mode: 'fixed', fixed: [1, 2, 3, 4, 5, 6] }));
+  assert.doesNotThrow(() => validateConfig({ ...config, rounds: 1000, tickets: 1000 }));
 });
 
 test('samples unique in-range numbers and replays the same seed', () => {
@@ -90,7 +91,7 @@ test('multiple identical fixed tickets share a single draw outcome', () => {
 });
 
 test('every purchased game appears in a one-draw receipt with a consistent verdict', () => {
-  for (const tickets of [1, 10, 100]) {
+  for (const tickets of [1, 10, 100, 1000]) {
     for (const mode of ['auto', 'fixed']) {
       const experiment = createExperiment({ ...config, rounds: 1, tickets, mode, fixed: [1, 2, 3, 4, 5, 6] });
       experiment.step(1);
@@ -105,6 +106,7 @@ test('every purchased game appears in a one-draw receipt with a consistent verdi
         visibleCounts[ticket.rank]++;
       }
       assert.deepEqual(visibleCounts, result.counts);
+      assert.equal(result.prize, visibleCounts.reduce((sum, count, rank) => sum + count * PRIZES[rank], 0));
     }
   }
 });

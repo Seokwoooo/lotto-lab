@@ -1,4 +1,4 @@
-import { createExperiment } from './core.js';
+import { createExperiment } from './core.js?v=5';
 
 let experiment = null, cancelled = false;
 

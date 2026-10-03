@@ -255,7 +255,8 @@ td small{font-size:12px;color:var(--muted);padding-left:4px}
 .receipt-pager button{display:grid;place-items:center;background:white;color:var(--ink);width:34px;height:32px;border:1px solid #dedfe3;border-radius:6px;padding:0;font-size:17px}
 .receipt-pager button:hover:not(:disabled){background:var(--yellow);border-color:var(--ink)}
 .receipt-pager button:disabled{opacity:.25}
-.receipt-pager span{font:700 12px var(--mono);color:var(--muted);min-width:67px;text-align:center}
+.receipt-pager select{font:700 12px var(--mono);color:var(--ink);background:transparent;border:0;padding:6px 4px;min-width:98px;cursor:pointer;border-radius:4px}
+.receipt-pager select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .reroll-button{border-radius:7px;background:#f5f7fd;border-color:#d8dfef;font-size:14px}
 .draw-intro{display:block;text-align:center}
 .mascot{display:block;flex-shrink:0;width:180px;aspect-ratio:1;background:url('./assets/lotto-mascots-sheet.png') no-repeat;background-size:300% 200%;background-position:0 0}
