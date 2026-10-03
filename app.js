@@ -1,4 +1,4 @@
-import { VERSION, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=5';
+import { VERSION, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=6';
 import { getProfile } from './profiles.js';
 
 const $ = id => document.getElementById(id);
@@ -189,6 +189,7 @@ function start(overrideRounds) {
   $('settings').disabled = true; $('stop-button').hidden = false; $('stop-button').disabled = false;
   $('start-button').disabled = true; $('single-draw').disabled = true;
   $('new-purchase').disabled = true;
+  $('big-budget-draw').disabled = true;
   for (const id of ['ticket-prev', 'ticket-next', 'ticket-jump']) $(id).disabled = true;
   text('stop-button', '여기서 멈추기');
   $('result-share').disabled = true; $('result-save').disabled = true;
@@ -197,7 +198,7 @@ function start(overrideRounds) {
   headline('이번에는', '어떤 결과가?');
   text('result-description', config.rounds === 1 ? `구매한 ${config.tickets}게임에 당첨번호 한 세트를 대조합니다.` : `${format.format(config.rounds)}회 연속 추첨 · 회차마다 ${config.tickets}게임 · ${config.mode === 'auto' ? '자동 번호' : '고정 번호'}`);
   try {
-    const worker = new Worker(new URL('./worker.js?v=5', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./worker.js?v=6', import.meta.url), { type: 'module' });
     state.worker = worker;
     worker.onmessage = ({ data }) => {
       if (data.type === 'error') { fail(data.message); return; }
@@ -221,6 +222,7 @@ function finish() {
   $('settings').disabled = false; $('stop-button').hidden = true;
   $('start-button').disabled = false; $('single-draw').disabled = false;
   $('new-purchase').disabled = false;
+  $('big-budget-draw').disabled = false;
   $('draw-stage').classList.remove('is-running');
   $('result-share').disabled = !state.result?.games; $('result-save').disabled = !state.result?.games;
   if (state.purchase && !state.result) renderTicketPage(state.purchase.last, state.purchase.config, false, 'ticket-list', state.purchasePage);
@@ -439,6 +441,15 @@ $('result-again').addEventListener('click', () => {
   if (state.showingFriend) { acceptChallenge(false); return; }
   state.challenge = null; $('shared-banner').hidden = true;
   showSimulator(true);
+});
+$('big-budget-draw').addEventListener('click', () => {
+  if (state.worker) return;
+  state.challenge = null; state.showingFriend = false;
+  $('shared-banner').hidden = true;
+  $('rounds').value = 100; $('tickets').value = 1000;
+  document.querySelector('input[name="mode"][value="auto"]').checked = true;
+  showSimulator(true);
+  start();
 });
 window.addEventListener('popstate', () => {
   if (location.hash !== '#result') { showSimulator(); return; }
