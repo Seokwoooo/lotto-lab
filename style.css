@@ -1,4 +1,4 @@
-@font-face{font-family:Pretendard;src:url('./assets/pretendard-variable.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:Pretendard;src:url('./assets/lotto-sans.woff2?v=15') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
 @font-face{font-family:Manrope;src:url('./assets/manrope-bold.ttf') format('truetype');font-style:normal;font-weight:700 900;font-display:swap}
 :root{--ink:#192b49;--muted:#728095;--blue:#1748d5;--line:#e2e6ec;--paper:#f7f8fa;--mono:Manrope,Pretendard,sans-serif;font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--ink);background:var(--paper);font-synthesis:none;line-height:1.55}
 *{box-sizing:border-box}
@@ -541,7 +541,7 @@ body.is-drawing{overflow:hidden}
 .result-share{min-height:46px!important;font-size:14px!important;padding:10px 13px!important}
 .result-save,.result-again{background:#fff;border:1px solid #dcd7cb!important;font-size:13px!important;color:#596171}
 .share-nudge{font-size:11px;margin-top:7px}
-.big-budget-action{display:grid;grid-template-columns:minmax(0,1fr) 76px 32px;align-items:center;gap:8px;position:relative;width:100%;border:2px solid var(--ink);background:var(--yellow);color:var(--ink);padding:17px 15px;border-radius:12px;box-shadow:0 5px 0 var(--ink);margin-top:23px;text-align:left;transition:transform .15s,box-shadow .15s,background .15s}
+.big-budget-action{display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center;gap:8px;position:relative;width:100%;border:2px solid var(--ink);background:var(--yellow);color:var(--ink);padding:17px 15px;border-radius:12px;box-shadow:0 5px 0 var(--ink);margin-top:23px;text-align:left;transition:transform .15s,box-shadow .15s,background .15s}
 .big-budget-action:hover:not(:disabled){background:#ffdb28;transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
 .big-budget-action:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
 .next-budget-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
@@ -588,3 +588,25 @@ body.is-drawing{overflow:hidden}
  .receipt-navigation{gap:8px}.receipt-navigation input{width:70px}.receipt-navigation>label{font-size:12px;gap:5px}.result-screen .type-card h2{font-size:20px}
  .rank-summary [data-count-digits="5"] strong{font-size:18px}.rank-summary [data-count-digits="6"] strong{font-size:15px}.rank-summary [data-count-digits="7"] strong{font-size:14px}.rank-summary .rank-lost strong{font-size:21px}
 }
+
+/* Keep the cumulative milestone in the existing first-prize card, with one primary action. */
+.budget-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:22px}
+.budget-presets button{min-height:40px;border:1px solid #d4dbea;border-radius:6px;background:#fff;font-size:13px;font-weight:750;color:var(--ink)}
+.budget-presets button:last-child{background:var(--yellow);border-color:#debd27}
+.budget-presets button.selected{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.budget-presets button:hover{border-color:var(--blue)}
+.journey-resume{display:block;margin:13px auto 0;padding:5px 0;border:0;background:none;color:var(--blue);font-size:12px;font-weight:650;text-decoration:underline;text-underline-offset:4px;word-break:keep-all}
+.result-money{margin-top:10px;border-top:1px solid #e3dfd5;padding-top:10px}
+.result-money summary{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;font-size:12px;color:#656c79;list-style:none}
+.result-money summary::-webkit-details-marker{display:none}
+.result-money[open] .details-sign{transform:rotate(45deg)}
+.result-summary .result-money .metrics{border:0;margin-top:10px;padding-top:0}
+.journey-note{font-size:11px!important;color:#858b97!important;border-top:1px solid #e3dfd5;padding-top:10px;margin-top:12px;line-height:1.7}
+.journey-reset{font-size:11px;padding:6px 0;margin-top:7px;border:0;background:none;color:#727985;text-decoration:underline;text-underline-offset:3px}
+.jackpot-milestone{display:flex;flex-direction:column;align-items:center;gap:3px;margin:6px 0 9px;font-size:clamp(22px,3.5vw,34px);line-height:1.35;letter-spacing:-.8px;word-break:keep-all}
+.first-prize-focus.is-milestone .jackpot-milestone strong{font-size:clamp(25px,5.5vw,54px);letter-spacing:-1.4px;overflow-wrap:anywhere;max-width:100%}
+.first-prize-focus.is-milestone .first-prize-outcome{gap:4px;margin:1px 0}
+.first-prize-focus.is-milestone .first-prize-outcome strong{font-size:24px;letter-spacing:0;line-height:1.3}
+.first-prize-focus.is-milestone .first-prize-outcome>span,.first-prize-focus.is-milestone .first-prize-outcome small{font-size:15px}
+.first-prize-focus.is-milestone .first-prize-context{max-width:100%;font-size:10px}
+@media(max-width:360px){.budget-presets{gap:4px}.budget-presets button{font-size:12px}.jackpot-milestone{font-size:21px}.first-prize-focus.is-milestone .jackpot-milestone strong{font-size:25px}.next-budget-title strong{font-size:29px}}

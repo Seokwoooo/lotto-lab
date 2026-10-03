@@ -15,8 +15,10 @@ export function createReceiptArchive({ rounds, tickets }) {
       });
       completed++;
     },
-    snapshot() {
-      return { rounds: completed, tickets, numbers: numbers.subarray(0, completed * tickets * 6), ranks: ranks.subarray(0, completed * tickets), draws: draws.subarray(0, completed * 7) };
+    snapshot({ releaseUnused = false } = {}) {
+      // A stopped run should not transfer and retain buffers reserved for a million games.
+      const part = (array, length) => releaseUnused && length < array.length ? array.slice(0, length) : array.subarray(0, length);
+      return { rounds: completed, tickets, numbers: part(numbers, completed * tickets * 6), ranks: part(ranks, completed * tickets), draws: part(draws, completed * 7) };
     }
   };
 }
@@ -25,7 +27,7 @@ export function createReceiptArchive({ rounds, tickets }) {
 export function indexReceipts(archive) {
   const perRound = Math.ceil(archive.tickets / 5);
   const total = archive.rounds * perRound;
-  const winners = new Uint32Array(total), losers = new Uint32Array(total);
+  const sheets = new Uint32Array(total);
   let won = 0, lost = 0, bestRank = 6, bestSheet = 0;
   for (let sheet = 0; sheet < total; sheet++) {
     const roundStart = Math.floor(sheet / perRound) * archive.tickets;
@@ -39,10 +41,12 @@ export function indexReceipts(archive) {
         if (rank < bestRank) { bestRank = rank; bestSheet = sheet; }
       }
     }
-    if (hasWin) winners[won++] = sheet;
-    else losers[lost++] = sheet;
+    if (hasWin) sheets[won++] = sheet;
+    else sheets[total - ++lost] = sheet;
   }
-  return { total, perRound, bestSheet, winners: winners.subarray(0, won), losers: losers.subarray(0, lost) };
+  // The filters partition one buffer; both keep chronological browsing order.
+  const losers = sheets.subarray(won).reverse();
+  return { total, perRound, bestSheet, winners: sheets.subarray(0, won), losers };
 }
 
 export function readReceipt(archive, sheet) {

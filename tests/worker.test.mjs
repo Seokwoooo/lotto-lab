@@ -78,4 +78,26 @@ test('a large worker run can stop between chunks without counting unfinished rou
   assert.equal(stopped.result.receipts.rounds, stopped.result.rounds);
   assert.equal(stopped.result.receipts.ranks.length, stopped.result.games);
   assert.equal(stopped.result.receiptIndex.total, stopped.result.rounds * Math.ceil(input.tickets / 5));
+  assert.equal(stopped.result.receipts.numbers.buffer.byteLength, stopped.result.games * 6);
+  assert.equal(stopped.result.receipts.ranks.buffer.byteLength, stopped.result.games);
+});
+
+test('repeated billion-won runs retain only one compact archive and reproduce a real first prize', { timeout: 15000 }, async () => {
+  const seeds = ['6e2c52cd17ad5e726390e1eddc330b0f', '5470e921955006c9c42c6cc0c255bd60', '6e2c52cd17ad5e726390e1eddc330b0f'];
+  for (let i = 0; i < seeds.length; i++) {
+    const messages = await runWorker({ ...config, rounds: 1000, seed: seeds[i] });
+    const result = messages.at(-1).result;
+    assert.equal(result.games, 1_000_000);
+    assert.equal(result.counts.reduce((sum, count) => sum + count, 0), result.games);
+    assert.equal(result.counts[1], i === 1 ? 1 : 0);
+    const { winners, losers, total, bestSheet } = result.receiptIndex;
+    assert.equal(total, 200_000);
+    assert.equal(winners.buffer, losers.buffer, 'One shared index buffer halves index memory');
+    assert.equal(winners.buffer.byteLength, total * 4);
+    const buffers = new Set([result.receipts.numbers.buffer, result.receipts.ranks.buffer, result.receipts.draws.buffer, winners.buffer, losers.buffer]);
+    assert.equal([...buffers].reduce((sum, buffer) => sum + buffer.byteLength, 0), 7_807_000);
+    assert.equal(readReceipt(result.receipts, total - 1).tickets.at(-1).game, result.games);
+    if (i === 1) assert.ok(readReceipt(result.receipts, bestSheet).tickets.some(ticket => ticket.rank === 1));
+    for (const filter of [winners, losers]) for (let j = 1; j < filter.length; j++) assert.ok(filter[j] > filter[j - 1]);
+  }
 });

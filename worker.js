@@ -1,5 +1,5 @@
 import { createExperiment, validateConfig } from './core.js?v=11';
-import { createReceiptArchive, indexReceipts } from './receipts.js?v=9';
+import { createReceiptArchive, indexReceipts } from './receipts.js?v=15';
 
 let experiment = null, archive = null, cancelled = false, lastReport = -Infinity;
 
@@ -34,14 +34,15 @@ function run() {
       // Progress stays small. The full history moves once, without copying its buffers.
       if (!finished) result.last = null;
       if (finished) {
-        result.receipts = archive.snapshot();
+        result.receipts = archive.snapshot({ releaseUnused: true });
         result.receiptIndex = indexReceipts(result.receipts);
       }
-      const transfer = finished ? [result.receipts.numbers.buffer, result.receipts.ranks.buffer, result.receipts.draws.buffer, result.receiptIndex.winners.buffer, result.receiptIndex.losers.buffer] : [];
+      const transfer = finished ? [...new Set([result.receipts.numbers.buffer, result.receipts.ranks.buffer, result.receipts.draws.buffer, result.receiptIndex.winners.buffer, result.receiptIndex.losers.buffer])] : [];
       self.postMessage({ type: cancelled ? 'stopped' : complete ? 'done' : 'progress', result }, transfer);
       lastReport = now;
     }
     if (!finished) setTimeout(run, 0);
+    else { experiment = null; archive = null; }
   } catch (error) {
     self.postMessage({ type: 'error', message: error.message });
   }

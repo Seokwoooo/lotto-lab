@@ -17,10 +17,10 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://lucianlabs.dev/lotto/">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./assets/lotto-sans.woff2?v=15" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
-  <link rel="stylesheet" href="./style.css?v=13">
-  <script type="module" src="./app.js?v=14"></script>
+  <link rel="stylesheet" href="./style.css?v=15">
+  <script type="module" src="./app.js?v=15"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -49,6 +49,7 @@
         <section class="draw-stage" id="draw-stage" aria-label="당첨번호 추첨">
           <div class="draw-intro"><div class="mascot-cast" aria-hidden="true"><div class="cast-member"><span class="cast-speech">일단 출근…</span><span class="mascot mascot-office"></span></div><div class="cast-member"><span class="cast-speech">혹시 퇴사각?</span><span class="mascot mascot-royal"></span></div></div><p>너는 어느 쪽?</p></div>
           <div class="draw-actions"><button class="start-button" id="start-button" form="experiment-form" type="submit"><span id="start-label">100만원치 바로 돌려보기</span><span class="button-arrow" aria-hidden="true">↗</span></button><button class="single-button" type="button" id="single-draw" hidden>1회만 추첨</button><button id="stop-button" class="stop-button" type="button" hidden>여기서 멈추기</button></div>
+          <button id="journey-resume" class="journey-resume" type="button" hidden></button>
           <p class="draw-action-note" id="draw-action-note">실제 지출 0원 · 당첨번호 한 세트에 1,000게임 대조</p>
           <div class="draw-live" aria-live="polite">
             <div class="draw-top"><span id="draw-status">추첨 준비 완료</span><span id="result-kicker">내 번호를 먼저 확인해보세요.</span></div>
@@ -63,6 +64,7 @@
         <summary><span>금액·번호 바꾸기</span><span id="settings-summary">자동 · 1,000게임 · 1회</span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <form id="experiment-form" novalidate>
           <fieldset id="settings">
+            <div class="budget-presets" role="group" aria-label="가상 구매 금액 빠른 선택"><button type="button" data-budget-games="1000">100만원</button><button type="button" data-budget-games="10000">1천만원</button><button type="button" data-budget-games="100000">1억원</button><button type="button" data-budget-games="1000000">10억원</button></div>
             <div class="control-row"><div class="control-block"><label for="rounds">추첨 횟수</label><div class="number-input"><input id="rounds" name="rounds" type="number" min="1" max="100000" step="1" value="1" inputmode="numeric" required><span>번</span></div><div class="presets" aria-label="추첨 횟수 빠른 선택"><button type="button" data-rounds="1">1번</button><button type="button" data-rounds="52">1년</button><button type="button" data-rounds="520">10년</button><button type="button" data-rounds="5200">100년</button></div><p id="years-hint" class="field-note">기본은 한 회차만 추첨합니다.</p></div>
             <div class="control-block"><label for="tickets">회차당 구매 게임</label><div class="number-input"><input id="tickets" name="tickets" type="number" min="1" max="1000" step="1" value="1000" inputmode="numeric" required><span>게임</span></div><div class="presets" aria-label="구매 게임 빠른 선택"><button type="button" data-tickets="1">1게임</button><button type="button" data-tickets="5">5게임</button><button type="button" data-tickets="100">100게임</button><button type="button" data-tickets="1000" class="selected" aria-pressed="true">1,000게임</button></div><p class="field-note">1게임 1,000원 · 1,000게임 = 1,000,000원</p></div>
             </div><div class="control-block mode-block"><span class="field-label">번호 선택</span><div class="segmented"><label><input type="radio" name="mode" value="auto" checked><span>매번 자동</span></label><label><input type="radio" name="mode" value="fixed"><span>내 번호 고정</span></label></div><p id="mode-hint" class="field-note">매 추첨마다 모든 장의 번호를 새로 고릅니다.</p><div id="number-picker" class="marking-slip" hidden><div class="slip-heading"><img src="./assets/lotto-official.svg" alt="로또 6/45" width="230" height="48"><span id="slip-mode">자동 미리보기</span></div><div class="slip-instruction"><b>A</b><span>1~45 중 6개 숫자를 마킹하세요</span><span>1,000원</span></div><div class="picker-top"><span><b id="pick-count">0</b> / 6개 선택</span><button type="button" id="quick-pick">자동으로 고르기</button></div><div id="number-grid" class="number-grid" role="group" aria-label="1부터 45까지 번호 6개 선택"></div><p class="field-note">고정 모드에서는 모든 장이 같은 번호입니다. 같은 회차에 같은 번호를 여러 장 사도 1등 확률은 같습니다.</p></div></div>
@@ -71,7 +73,7 @@
             
           </fieldset>
         </form>
-        <p class="setup-footnote">한 번에 최대 100만 게임. 실제 지출은 항상 0원입니다.</p>
+        <p class="setup-footnote">한 번에 최대 10억원 · 100만 게임. 실제 지출은 항상 0원입니다.</p>
       </details>
       <p class="odds-note">한 게임의 1등 확률 <strong>1 / 8,145,060</strong><span>약 814만 분의 1</span></p>
 
@@ -83,6 +85,7 @@
         <div class="section-top"><h2 id="summary-title">전체 당첨 내역</h2><span id="best-rank" class="tiny-tag">추첨 완료</span></div>
         <div class="first-prize-focus" data-rank="1">
           <p id="first-prize-story" class="first-prize-story">추첨 결과는…</p>
+          <h2 id="jackpot-milestone" class="jackpot-milestone" hidden><span>지금까지 총</span><strong id="milestone-spent"></strong><span>써서 1등 당첨!!!</span></h2>
           <p class="first-prize-outcome"><span>1등은 </span><strong id="rank-1">0</strong><small>번</small><span id="first-prize-end" aria-hidden="true">…</span></p>
           <p id="first-prize-reaction" class="first-prize-reaction">이번엔 1등 운이 없네요…</p>
           <p id="first-prize-context" class="first-prize-context">각 게임의 당첨을 한 번씩 집계합니다.</p>
@@ -94,7 +97,7 @@
           <div data-rank="5"><span>5등</span><div class="rank-count"><strong id="rank-5">0</strong><small>번</small></div></div>
           <div data-rank="0" class="rank-lost"><span>꽝</span><div class="rank-count"><strong id="rank-0">0</strong><small>번</small></div></div>
         </div>
-        <div class="metrics" aria-label="전체 가상 구매 비용과 당첨금"><div><span>가상 구매 금액</span><strong id="stat-cost">0원</strong></div><div><span>예시 당첨금 · 세전</span><strong id="stat-prize">0원</strong></div><div><span>가상 손익</span><strong id="stat-balance">0원</strong></div></div>
+        <details class="result-money"><summary>가상 구매 금액·당첨금·손익 <span class="details-sign" aria-hidden="true">+</span></summary><div class="metrics" aria-label="전체 가상 구매 비용과 당첨금"><div><span>가상 구매 금액</span><strong id="stat-cost">0원</strong></div><div><span>예시 당첨금 · 세전</span><strong id="stat-prize">0원</strong></div><div><span>가상 손익</span><strong id="stat-balance">0원</strong></div></div></details>
       </section>
       <div class="result-layout">
         <section class="receipt-column" aria-labelledby="receipts-title">
@@ -114,18 +117,17 @@
             <div class="receipt-navigation"><button id="result-ticket-prev" type="button" aria-label="이전 영수증">←</button><label for="result-ticket-jump"><input id="result-ticket-jump" type="number" min="1" value="1" inputmode="numeric" aria-label="전체 구매 내역에서 이동할 영수증 장 번호"><span id="result-ticket-page" aria-live="polite">/ 200장</span></label><button id="result-ticket-next" type="button" aria-label="다음 영수증">→</button></div>
             <input id="receipt-scrubber" class="receipt-scrubber" type="range" min="1" max="200" value="1" aria-label="영수증 묶음 빠르게 넘기기">
           </form>
-          <p id="result-detail-caption" class="result-detail-caption"></p><span id="receipt-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></span>
+          <p id="result-detail-caption" class="result-detail-caption sr-only"></p><span id="receipt-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></span>
         </section>
         <div class="type-reading">
-          <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow"><span id="type-tier">이번에 뽑은 내 운</span> <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p><p id="type-basis" class="type-basis"></p></div></article>
-          <details class="fortune-details"><summary>내 운 풀이 <span class="details-sign" aria-hidden="true">+</span></summary><p id="type-explanation"></p><p id="type-facts" class="type-facts"></p><p class="type-friend">친구는 혹시 <strong id="type-friend"></strong>?</p></details>
+          <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow"><span id="type-tier">이번에 뽑은 내 운</span> <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p></div></article>
+          <details class="fortune-details"><summary>내 운 풀이 <span class="details-sign" aria-hidden="true">+</span></summary><p id="type-explanation"></p><p id="type-basis" class="type-basis"></p><p class="journey-note">10억원 도전의 누적 금액은 이 탭에서 완료한 게임만 합산합니다. 새로고침해도 유지되며, 첫 1등 이후 다음 도전은 새 기록으로 시작합니다. 실제 지출은 0원입니다.</p><button id="journey-reset" class="journey-reset" type="button" hidden>누적 도전 기록 초기화</button></details>
           <section class="friend-challenge" id="friend-challenge" hidden aria-labelledby="challenge-title"><h3 id="challenge-title"></h3><p id="challenge-copy"></p><div id="challenge-scores" class="challenge-scores" hidden><div><span>친구</span><strong id="friend-prize"></strong></div><div><span>나</span><strong id="my-prize"></strong></div></div><button id="challenge-start" class="challenge-start" type="button">같은 금액으로 붙어보기 ↗</button></section>
           <button id="big-budget-draw" class="big-budget-action" type="button">
             <span class="next-budget-copy"><span id="next-budget-kicker" class="next-budget-kicker">이번에는</span><span class="next-budget-title"><strong id="next-budget-amount">1천만원</strong><span>돌려보기</span></span><span id="next-budget-games" class="next-budget-games">10,000게임 · 10회 추첨</span><span class="next-budget-free">실제 지출은 0원</span></span>
-            <span id="next-budget-character" class="mascot mascot-clover next-budget-character" aria-hidden="true"></span><span class="next-budget-arrow" aria-hidden="true">↗</span>
+            <span class="next-budget-arrow" aria-hidden="true">↗</span>
           </button>
           <div class="result-actions"><button id="result-share" class="result-share" type="button">친구에게 내 결과 보내기 <span aria-hidden="true">↗</span></button><button id="result-save" class="result-save" type="button">이미지 저장</button><button id="result-again" class="result-again" type="button">다시 돌려보기</button></div>
-          <p id="share-nudge" class="share-nudge">같은 금액으로 친구의 운과 붙어보세요.</p>
         </div>
       </div>
       <details class="result-breakdown"><summary>등수 기준과 예시 당첨금 <span class="details-sign" aria-hidden="true">+</span></summary><table><caption class="sr-only">로또 등수 조건과 이 시뮬레이터의 예시 당첨금</caption><tbody><tr><th scope="row">1등 · 6개 일치</th><td>20억 원 <small>예시</small></td></tr><tr><th scope="row">2등 · 5개 + 보너스</th><td>5,000만 원 <small>예시</small></td></tr><tr><th scope="row">3등 · 5개 일치</th><td>150만 원 <small>예시</small></td></tr><tr><th scope="row">4등 · 4개 일치</th><td>5만 원</td></tr><tr><th scope="row">5등 · 3개 일치</th><td>5천 원</td></tr></tbody></table><p class="prize-note">실제 1~3등 금액은 회차마다 달라집니다. 위의 예시 금액으로 계산하며 세금과 이월은 반영하지 않습니다.</p></details>

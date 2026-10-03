@@ -1,7 +1,8 @@
 import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=11';
 import { getProfile, PROFILE_COUNT } from './profiles.js?v=14';
-import { readReceipt } from './receipts.js?v=9';
-import { nextBudgetStep } from './budget.js?v=9';
+import { readReceipt } from './receipts.js?v=15';
+import { nextBudgetStep } from './budget.js?v=15';
+import { createBillionJourney, BILLION_GAMES } from './journey.js?v=15';
 import { playDrawReveal } from './draw-reveal.js?v=12';
 import { firstPrizePresentation, createFirstPrizeEffects } from './first-prize.js?v=12';
 
@@ -10,6 +11,9 @@ const format = new Intl.NumberFormat('ko-KR');
 const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
 const state = { worker: null, reveal: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, receiptIndex: null, receiptFilter: 'all', receiptAnimation: null, showingFriend: false, challenge: null };
+let journeyStorage;
+try { journeyStorage = window.sessionStorage; } catch { /* Keep the challenge usable without storage. */ }
+const journey = createBillionJourney(journeyStorage);
 const text = (id, value) => { $(id).textContent = value; };
 const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games === 10000 ? '1천만원치' : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
 const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
@@ -94,7 +98,11 @@ function updateSettings() {
   $('chance-value').replaceChildren(document.createTextNode(chanceLabel), unit('%'));
   document.querySelectorAll('[data-rounds]').forEach(button => select(button, rounds === Number(button.dataset.rounds)));
   document.querySelectorAll('[data-tickets]').forEach(button => select(button, tickets === Number(button.dataset.tickets)));
+  document.querySelectorAll('[data-budget-games]').forEach(button => select(button, mode === 'auto' && rounds * tickets === Number(button.dataset.budgetGames)));
   $('form-error').hidden = true;
+  const saved = journey.status();
+  $('journey-resume').hidden = !saved || saved.hit;
+  if (saved && !saved.hit) text('journey-resume', `10억원 도전 이어하기 · 지금까지 ${currency(saved.spent)}`);
   preparePurchase();
 }
 
@@ -120,6 +128,7 @@ function preparePurchase() {
 }
 
 function resetExperiment() {
+  state.receiptAnimation?.cancel(); state.receiptAnimation = null;
   state.purchase = null;
   state.result = null;
   state.receiptIndex = null;
@@ -298,7 +307,7 @@ function start(overrideRounds, { replay = false } = {}) {
   headline('이번에는', '어떤 결과가?');
   text('result-description', config.rounds === 1 ? `구매한 ${config.tickets}게임에 당첨번호 한 세트를 대조합니다.` : `${format.format(config.rounds)}회 연속 추첨 · 회차마다 ${config.tickets}게임 · ${config.mode === 'auto' ? '자동 번호' : '고정 번호'}`);
   try {
-    const worker = new Worker(new URL('./worker.js?v=11', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./worker.js?v=15', import.meta.url), { type: 'module' });
     state.worker = worker;
     let deliver;
     const ready = new Promise(resolve => { deliver = resolve; });
@@ -309,7 +318,8 @@ function start(overrideRounds, { replay = false } = {}) {
       if (!data.result) return;
       const finished = data.type === 'done' || data.type === 'stopped';
       if (!finished) {
-        render(data.result, false, false);
+        // The result is hidden during the draw. Avoid rebuilding its metrics on every progress tick.
+        $('progress').value = data.result.rounds / config.rounds * 100;
         text('reveal-calculation', `${format.format(data.result.rounds)} / ${format.format(config.rounds)}회 추첨 · 영수증 대조 중`);
       }
       if (finished) {
@@ -320,6 +330,7 @@ function start(overrideRounds, { replay = false } = {}) {
         Promise.all([visualsReady, state.reveal?.finished ?? ready]).then(([visualsLoaded, revealed]) => {
           if (state.worker !== worker || !revealed) return;
           state.result = data.result;
+          state.result.journey = journey.record(data.result, { replay, friend: state.showingFriend });
           render(data.result, true, data.type === 'stopped');
           $('result-screen').classList.toggle('visual-fallback', !visualsLoaded);
           finish(); showResultScreen();
@@ -380,6 +391,17 @@ function render(result, finished, stopped) {
   text('first-prize-context', firstPrize.context);
   text('first-prize-reaction', firstPrize.reaction);
   text('first-prize-end', firstPrize.end);
+  const record = result.journey;
+  text('summary-title', record ? '이번 도전 당첨 내역' : '전체 당첨 내역');
+  const milestone = Boolean(record?.hit && counts[1] > 0);
+  $('rank-1').closest('[data-rank]').classList.toggle('is-milestone', milestone);
+  $('jackpot-milestone').hidden = !milestone;
+  $('first-prize-reaction').hidden = milestone;
+  if (record) {
+    text('first-prize-story', milestone ? `드디어… ${format.format(record.attempts)}번째 10억원 도전에서` : `10억원 도전 ${format.format(record.attempts)}번째에도…`);
+    text('first-prize-context', `누적 가상 구매 ${currency(record.spent)} · 이번 결과 ${format.format(games)}게임${stopped ? ' · 중도 종료' : ''}`);
+    text('milestone-spent', currency(record.spent));
+  }
   const rank = best?.rank ?? 0, wins = games - counts[0];
   text('best-rank', rank ? `최고 ${rank}등` : '아직 당첨 없음');
   text('progress-text', `${format.format(rounds)} / ${format.format(config.rounds)}번 추첨${stopped ? ' · 중간에 멈춤' : finished ? ' · 완료' : ''}`);
@@ -554,7 +576,6 @@ function showChallenge(result) {
   $('challenge-scores').hidden = incoming || !state.challenge;
   $('challenge-start').hidden = !incoming;
   $('result-share').hidden = incoming;
-  $('share-nudge').hidden = incoming;
   if (incoming) {
     text('challenge-title', '이 정도 운이면, 내가 이길 수 있지?');
     text('challenge-copy', `친구는 ${budgetLabel(result.games)} 돌리고 ${currency(result.prize)}을 건졌어요. 같은 설정, 새로운 추첨으로 붙어보세요.`);
@@ -578,9 +599,8 @@ function showResultScreen(push = true) {
   text('result-page-title', state.showingFriend ? '친구가 뽑은 운, 이 정도였어요.' : `${budgetLabel(result.games)} 돌린 내 운은…`);
   text('result-page-subtitle', `${format.format(result.rounds)}회 추첨 · 전체 회차 합산${state.showingFriend ? ' · 친구의 결과' : ''}`);
   text('type-explanation', profile.description);
-  text('type-facts', profile.reaction);
-  text('type-friend', profile.friend);
-  text('result-again', state.showingFriend ? '내 번호로 도전하기' : '다시 돌려보기');
+  text('result-again', state.showingFriend ? '내 번호로 도전하기' : '금액·번호 바꾸기');
+  $('journey-reset').hidden = !journey.status() || state.showingFriend;
   $('type-card').style.setProperty('--type-paper', profile.color);
   if (!state.receiptIndex) {
     state.receiptIndex = result.receiptIndex;
@@ -592,12 +612,11 @@ function showResultScreen(push = true) {
   for (const filter of ['all', 'winners', 'losers']) text(`receipts-${filter}`, format.format(filter === 'all' ? state.receiptIndex.total : state.receiptIndex[filter].length));
   renderResultReceipt();
   showChallenge(result);
-  const next = nextBudgetStep(result.games);
-  text('next-budget-kicker', next.repeat ? '이번에도 한 번 더' : '이번에는');
+  const next = nextBudgetStep(result.journey ? BILLION_GAMES : result.games);
+  text('next-budget-kicker', result.journey?.hit ? '새 누적 기록으로 다시 도전' : result.journey ? `이번엔 나올까? ${format.format(result.journey.attempts + 1)}번째 도전` : next.repeat ? '다시 한 번, 10억원 도전' : '이번에는');
   text('next-budget-amount', next.amount);
   text('next-budget-games', `${format.format(next.games)}게임 · ${format.format(next.rounds)}회 추첨`);
-  $('next-budget-character').className = `mascot mascot-${profile.rank === 1 ? 'royal' : 'clover'} next-budget-character`;
-  $('big-budget-draw').setAttribute('aria-label', `${next.repeat ? '1억원 한 번 더' : `이번에는 ${next.amount}`} 돌려보기. 자동 ${format.format(next.games)}게임, 실제 지출 0원.`);
+  $('big-budget-draw').setAttribute('aria-label', `${next.amount}${next.repeat ? ' 한 번 더' : ''} 돌려보기. 자동 ${format.format(next.games)}게임, 실제 지출 0원.`);
   $('simulator-screen').hidden = true; $('result-screen').hidden = false;
   document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
   if (push && location.href !== shareUrl(result, state.showingFriend)) history.pushState({ view: 'result' }, '', shareUrl(result, state.showingFriend));
@@ -633,21 +652,39 @@ $('result-again').addEventListener('click', () => {
   state.challenge = null; $('shared-banner').hidden = true;
   showSimulator(true);
 });
-$('big-budget-draw').addEventListener('click', () => {
-  if (state.worker || !state.result) return;
-  const next = nextBudgetStep(state.result.games);
+function startBudget(next) {
+  if (state.worker) return;
   state.challenge = null; state.showingFriend = false;
   $('shared-banner').hidden = true;
   $('rounds').value = next.rounds; $('tickets').value = next.tickets;
   document.querySelector('input[name="mode"][value="auto"]').checked = true;
   showSimulator(true);
   start();
+}
+$('big-budget-draw').addEventListener('click', () => {
+  if (!state.result) return;
+  startBudget(nextBudgetStep(state.result.journey ? BILLION_GAMES : state.result.games));
+});
+$('journey-resume').addEventListener('click', () => startBudget(nextBudgetStep(BILLION_GAMES)));
+document.querySelectorAll('[data-budget-games]').forEach(button => button.addEventListener('click', () => {
+  $('rounds').value = Number(button.dataset.budgetGames) / 1000; $('tickets').value = 1000;
+  document.querySelector('input[name="mode"][value="auto"]').checked = true;
+  changePurchase();
+}));
+$('journey-reset').addEventListener('click', () => {
+  journey.reset();
+  if (state.result) { state.result.journey = null; render(state.result, true, !state.result.complete); showResultScreen(false); }
+  toast('누적 기록을 초기화했어요. 다음 10억원 도전부터 새로 셉니다.');
 });
 window.addEventListener('popstate', () => {
   if (state.worker) { finish(); resetExperiment(); updateSettings(); }
   if (location.hash !== '#result') { showSimulator(); return; }
   const params = new URLSearchParams(location.search);
-  if (state.result && params.get('s') === state.result.config.seed && Number(params.get('r')) === state.result.rounds) { state.showingFriend = params.get('c') === '1'; showResultScreen(false); }
+  if (state.result && params.get('s') === state.result.config.seed && Number(params.get('r')) === state.result.rounds) {
+    state.showingFriend = params.get('c') === '1';
+    state.result.journey = journey.record(state.result, { replay: true, friend: state.showingFriend });
+    render(state.result, true, !state.result.complete); showResultScreen(false);
+  }
   else if (!state.worker) { restoreSharedExperiment(); resetExperiment(); updateSettings(); start(undefined, { replay: true }); }
 });
 
@@ -662,6 +699,9 @@ function shareUrl(result, challenge = false) {
 
 function shareText(result) {
   const profile = getProfile(result);
+  if (result.journey?.hit && result.counts[1] > 0) {
+    return `드디어… ${format.format(result.journey.attempts)}번째 10억원 도전!\n지금까지 총 ${currency(result.journey.spent)} 써서 1등 당첨!!!\n가상 구매 누적 · 실제 지출 0원\n링크는 이번 추첨 결과. 너는 몇 번 만에 될까? #로또랩`;
+  }
   return `${budgetLabel(result.games)} 돌리고 ${currency(result.prize)} 건짐.\n내 운은 「${profile.title.replaceAll('\n', ' ')}」\n“${profile.line}”\n${profile.basis}\n너 이거 이길 수 있어? 같은 금액으로 붙어보자. 실제 지출은 0원! #로또랩`;
 }
 
@@ -714,18 +754,22 @@ $('result-save').addEventListener('click', async () => {
     const cellWidth = sheet.naturalWidth / 3, cellHeight = sheet.naturalHeight / 2;
     ctx.drawImage(sheet, column * cellWidth, row * cellHeight, cellWidth, cellHeight, 320, 129, 440, 440);
     ctx.fillStyle = ink; ctx.textAlign = 'center';
-    const titles = profile.title.split('\n');
+    const milestone = result.journey?.hit && result.counts[1] > 0;
+    const titles = milestone ? ['드디어…', '1등 당첨!!!'] : profile.title.split('\n');
     let titleSize = 88;
     for (const title of titles) titleSize = Math.min(titleSize, fit(title, titleSize, 948, 900));
     ctx.font = `900 ${titleSize}px Pretendard, sans-serif`;
     titles.forEach((line, i) => ctx.fillText(line, 540, 644 + i * titleSize * 1.14));
-    ctx.fillStyle = '#535b70'; fit(`“${profile.line}”`, 33, 930, 650); ctx.fillText(`“${profile.line}”`, 540, 814);
+    const cardLine = milestone ? `${format.format(result.journey.attempts)}번째 10억원 도전에서 만난 1등` : `“${profile.line}”`;
+    ctx.fillStyle = '#535b70'; fit(cardLine, 33, 930, 650); ctx.fillText(cardLine, 540, 814);
     ctx.fillStyle = '#ffffffcd'; ctx.beginPath(); ctx.roundRect(56, 866, 968, 248, 24); ctx.fill();
-    ctx.fillStyle = '#626779'; ctx.font = '650 30px Pretendard, sans-serif'; ctx.fillText(`${budgetLabel(result.games)} 돌리고`, 540, 927);
-    ctx.fillStyle = ink; fit(`${currency(result.prize)} 건짐`, 72, 898, 900); ctx.fillText(`${currency(result.prize)} 건짐`, 540, 1016);
-    ctx.fillStyle = '#626779'; fit(profile.reaction, 29, 896, 650); ctx.fillText(profile.reaction, 540, 1072);
+    ctx.fillStyle = '#626779'; ctx.font = '650 30px Pretendard, sans-serif'; ctx.fillText(milestone ? '지금까지 총' : `${budgetLabel(result.games)} 돌리고`, 540, 927);
+    const cardAmount = milestone ? currency(result.journey.spent) : `${currency(result.prize)} 건짐`;
+    ctx.fillStyle = ink; fit(cardAmount, 72, 898, 900); ctx.fillText(cardAmount, 540, 1016);
+    const cardReaction = milestone ? '써서 1등 당첨!!! · 누적 가상 구매 금액' : profile.reaction;
+    ctx.fillStyle = '#626779'; fit(cardReaction, 29, 896, 650); ctx.fillText(cardReaction, 540, 1072);
     ctx.fillStyle = ink;
-    const summary = `${format.format(result.games)}게임 · ${profile.basis}`;
+    const summary = `${milestone ? '이번 도전 · ' : ''}${format.format(result.games)}게임 · ${profile.basis}`;
     fit(summary, 29, 960, 700); ctx.fillText(summary, 540, 1171);
     ctx.font = '800 29px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 540, 1230);
     ctx.fillStyle = '#626779'; ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('가상 추첨 · 1~3등은 세전 예시 금액 · 재미로 붙인 별명', 540, 1277);
