@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/pretendard-variable.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
   <link rel="stylesheet" href="./style.css?v=13">
-  <script type="module" src="./app.js?v=13"></script>
+  <script type="module" src="./app.js?v=14"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -117,7 +117,7 @@
           <p id="result-detail-caption" class="result-detail-caption"></p><span id="receipt-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></span>
         </section>
         <div class="type-reading">
-          <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow">이번에 뽑은 내 운 <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p><p id="type-basis" class="type-basis"></p></div></article>
+          <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow"><span id="type-tier">이번에 뽑은 내 운</span> <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p><p id="type-basis" class="type-basis"></p></div></article>
           <details class="fortune-details"><summary>내 운 풀이 <span class="details-sign" aria-hidden="true">+</span></summary><p id="type-explanation"></p><p id="type-facts" class="type-facts"></p><p class="type-friend">친구는 혹시 <strong id="type-friend"></strong>?</p></details>
           <section class="friend-challenge" id="friend-challenge" hidden aria-labelledby="challenge-title"><h3 id="challenge-title"></h3><p id="challenge-copy"></p><div id="challenge-scores" class="challenge-scores" hidden><div><span>친구</span><strong id="friend-prize"></strong></div><div><span>나</span><strong id="my-prize"></strong></div></div><button id="challenge-start" class="challenge-start" type="button">같은 금액으로 붙어보기 ↗</button></section>
           <button id="big-budget-draw" class="big-budget-action" type="button">

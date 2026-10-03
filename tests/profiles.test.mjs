@@ -130,3 +130,33 @@ test('first and second prizes keep priority over third-prize subtypes across suc
   assert.equal(miss.rank, 0); assert.equal(miss.code, 'NORM');
   assert.ok(getProfile(outcome([2, 2])).code !== second.code);
 });
+
+test('jackpot language and the royal character require an actual first-prize win', () => {
+  const cases = [[0], [5], [4], [2], [2, 2], ...Array.from({ length: 6 }, (_, i) => Array(i + 1).fill(3))];
+  for (const ranks of cases) {
+    const result = outcome(ranks);
+    // Even an inconsistent old best-ticket object cannot turn a zero into a jackpot.
+    result.best = { rank: 1 };
+    for (let variant = 1; variant <= 6; variant++) {
+      result.config.seed = variant.toString(16).padStart(8, '0') + config.seed.slice(8);
+      const profile = getProfile(result);
+      assert.notEqual(profile.rank, 1);
+      assert.notEqual(profile.character, 'royal');
+      assert.doesNotMatch([profile.title, profile.line, profile.description, profile.reaction].join(' '), /이 정도일 줄이야|캡처|전설|세계관|주인공|주연|액자/);
+    }
+  }
+});
+
+test('the reserved headline and capture message belong to a real first-prize card', () => {
+  const result = outcome([1]);
+  const lines = new Set();
+  for (let variant = 1; variant <= 6; variant++) {
+    result.config.seed = variant.toString(16).padStart(8, '0') + config.seed.slice(8);
+    const profile = getProfile(result);
+    assert.equal(profile.rank, 1);
+    assert.equal(profile.character, 'royal');
+    assert.match(profile.title, /운 좋은 줄은 알았는데\n이 정도일 줄이야/);
+    lines.add(profile.line);
+  }
+  assert.ok(lines.has('이건 캡처부터 해야 해.'));
+});

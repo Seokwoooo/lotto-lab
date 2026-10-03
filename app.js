@@ -1,5 +1,5 @@
 import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=11';
-import { getProfile, PROFILE_COUNT } from './profiles.js?v=13';
+import { getProfile, PROFILE_COUNT } from './profiles.js?v=14';
 import { readReceipt } from './receipts.js?v=9';
 import { nextBudgetStep } from './budget.js?v=9';
 import { playDrawReveal } from './draw-reveal.js?v=12';
@@ -571,6 +571,7 @@ function showResultScreen(push = true) {
   if (!state.result) return;
   const result = state.result, profile = getProfile(result);
   text('type-code', profile.code); text('type-title', profile.title); text('type-line', profile.line);
+  text('type-tier', profile.rank === 1 ? '1등 당첨!' : profile.rank ? `최고 ${profile.rank}등 · 1등은 0번` : '이번 실험 당첨 없음');
   text('type-basis', profile.basis);
   $('type-character').className = `mascot mascot-${profile.character}`;
   $('type-character').setAttribute('aria-label', `${profile.title.replaceAll('\n', ' ')} 캐릭터`);
@@ -595,7 +596,7 @@ function showResultScreen(push = true) {
   text('next-budget-kicker', next.repeat ? '이번에도 한 번 더' : '이번에는');
   text('next-budget-amount', next.amount);
   text('next-budget-games', `${format.format(next.games)}게임 · ${format.format(next.rounds)}회 추첨`);
-  $('next-budget-character').className = `mascot mascot-${next.games === 10_000 ? 'clover' : 'royal'} next-budget-character`;
+  $('next-budget-character').className = `mascot mascot-${profile.rank === 1 ? 'royal' : 'clover'} next-budget-character`;
   $('big-budget-draw').setAttribute('aria-label', `${next.repeat ? '1억원 한 번 더' : `이번에는 ${next.amount}`} 돌려보기. 자동 ${format.format(next.games)}게임, 실제 지출 0원.`);
   $('simulator-screen').hidden = true; $('result-screen').hidden = false;
   document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
