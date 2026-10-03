@@ -3,7 +3,7 @@ import { getProfile } from './profiles.js?v=14';
 import { getLuck } from './luck.js?v=16';
 import { readReceipt } from './receipts.js?v=15';
 import { nextBudgetStep } from './budget.js?v=15';
-import { createBillionJourney, BILLION_GAMES } from './journey.js?v=15';
+import { createBillionJourney, BILLION_GAMES } from './journey.js?v=17';
 import { playDrawReveal } from './draw-reveal.js?v=12';
 import { firstPrizePresentation, createFirstPrizeEffects } from './first-prize.js?v=12';
 
@@ -12,9 +12,13 @@ const format = new Intl.NumberFormat('ko-KR');
 const decimal = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 const currency = value => `${format.format(value)}원`;
 const state = { worker: null, reveal: null, result: null, purchase: null, seed: null, picks: new Set(), timer: null, purchasePage: 0, resultPage: 0, receiptIndex: null, receiptFilter: 'all', receiptAnimation: null, showingFriend: false, challenge: null };
-let journeyStorage;
-try { journeyStorage = window.sessionStorage; } catch { /* Keep the challenge usable without storage. */ }
-const journey = createBillionJourney(journeyStorage);
+let legacyJourneyStorage;
+try { legacyJourneyStorage = window.sessionStorage; } catch { /* Only needed to remove legacy data. */ }
+const journey = createBillionJourney(legacyJourneyStorage);
+const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+const returningVisit = navigationType === 'reload' || navigationType === 'back_forward';
+// An explicit shared URL opens a replay. Reloading or returning starts a new visit.
+if (returningVisit) history.replaceState(null, '', location.pathname);
 const text = (id, value) => { $(id).textContent = value; };
 const budgetLabel = games => games >= 100000 ? `${decimal.format(games / 100000)}억원치` : games === 10000 ? '1천만원치' : games >= 10 ? `${decimal.format(games / 10)}만원치` : `${currency(games * 1000)}어치`;
 const drawLabel = (games, rounds) => `${budgetLabel(games)} ${rounds === 1 ? '바로 돌려보기' : '연속 돌려보기'}`;
@@ -28,7 +32,20 @@ const firstPrizeEffects = createFirstPrizeEffects({
 });
 resultMotion.addEventListener('change', () => { if (resultMotion.matches) firstPrizeEffects.cancel(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) firstPrizeEffects.cancel(); });
-window.addEventListener('pagehide', () => firstPrizeEffects.cancel());
+window.addEventListener('pagehide', () => {
+  journey.reset();
+  firstPrizeEffects.cancel();
+  state.worker?.terminate(); state.worker = null;
+  state.reveal?.cancel(); state.reveal = null;
+  state.receiptAnimation?.cancel(); state.receiptAnimation = null;
+  state.result = null; state.receiptIndex = null; state.purchase = null; state.challenge = null;
+  $('result-screen').hidden = true;
+});
+window.addEventListener('pageshow', event => {
+  // A restored document can retain its JS heap. Replace it with a clean main page.
+  if (event.persisted) { location.replace(location.pathname); return; }
+  if (returningVisit) { $('experiment-form').reset(); updateSettings(); }
+});
 window.addEventListener('resize', () => firstPrizeEffects.cancel());
 
 let resultVisuals;
@@ -826,6 +843,7 @@ function restoreSharedExperiment() {
   } catch { toast('이 공유 링크는 재현할 수 없어요. 새 실험을 시작해보세요.'); }
 }
 
+$('experiment-form').reset();
 restoreSharedExperiment();
 if (state.picks.size === 0) state.picks = new Set(createSampler(createRandom(freshSeed()))(6));
 renderPicks();

@@ -1,4 +1,4 @@
-@font-face{font-family:Pretendard;src:url('./assets/lotto-sans.woff2?v=16') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:Pretendard;src:url('./assets/lotto-sans.woff2?v=17') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
 @font-face{font-family:Manrope;src:url('./assets/manrope-bold.ttf') format('truetype');font-style:normal;font-weight:700 900;font-display:swap}
 :root{--ink:#192b49;--muted:#728095;--blue:#1748d5;--line:#e2e6ec;--paper:#f7f8fa;--mono:Manrope,Pretendard,sans-serif;font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--ink);background:var(--paper);font-synthesis:none;line-height:1.55}
 *{box-sizing:border-box}
