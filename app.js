@@ -1,5 +1,6 @@
 import { VERSION, PRIZES, validateConfig, createRandom, createSampler, createExperiment, firstPrizeChance } from './core.js?v=11';
-import { getProfile, PROFILE_COUNT } from './profiles.js?v=14';
+import { getProfile } from './profiles.js?v=14';
+import { getLuck } from './luck.js?v=16';
 import { readReceipt } from './receipts.js?v=15';
 import { nextBudgetStep } from './budget.js?v=15';
 import { createBillionJourney, BILLION_GAMES } from './journey.js?v=15';
@@ -590,7 +591,10 @@ function showChallenge(result) {
 
 function showResultScreen(push = true) {
   if (!state.result) return;
-  const result = state.result, profile = getProfile(result);
+  const result = state.result, profile = getProfile(result), luck = getLuck(result);
+  for (const key of ['scope', 'percent', 'metric', 'verdict', 'evidence', 'basis']) text(`luck-${key}`, luck[key]);
+  text('luck-label', luck.label.replace(/^의 /, '')); text('luck-mode-note', luck.modeNote);
+  $('type-card').dataset.compact = String(luck.percent.length > 8);
   text('type-code', profile.code); text('type-title', profile.title); text('type-line', profile.line);
   text('type-tier', profile.rank === 1 ? '1등 당첨!' : profile.rank ? `최고 ${profile.rank}등 · 1등은 0번` : '이번 실험 당첨 없음');
   text('type-basis', profile.basis);
@@ -618,7 +622,7 @@ function showResultScreen(push = true) {
   text('next-budget-games', `${format.format(next.games)}게임 · ${format.format(next.rounds)}회 추첨`);
   $('big-budget-draw').setAttribute('aria-label', `${next.amount}${next.repeat ? ' 한 번 더' : ''} 돌려보기. 자동 ${format.format(next.games)}게임, 실제 지출 0원.`);
   $('simulator-screen').hidden = true; $('result-screen').hidden = false;
-  document.title = `${profile.title.replaceAll('\n', ' ')} · 내 로또 유형 · 로또랩`;
+  document.title = `${luck.headline} · 로또랩`;
   if (push && location.href !== shareUrl(result, state.showingFriend)) history.pushState({ view: 'result' }, '', shareUrl(result, state.showingFriend));
   window.scrollTo({ top: 0, behavior: 'instant' });
   $('result-page-title').setAttribute('tabindex', '-1');
@@ -698,11 +702,12 @@ function shareUrl(result, challenge = false) {
 }
 
 function shareText(result) {
-  const profile = getProfile(result);
+  const luck = getLuck(result);
+  const reading = `${luck.headline}\n${luck.evidence}\n${luck.metric} · ${luck.scope}\n${luck.verdict}`;
   if (result.journey?.hit && result.counts[1] > 0) {
-    return `드디어… ${format.format(result.journey.attempts)}번째 10억원 도전!\n지금까지 총 ${currency(result.journey.spent)} 써서 1등 당첨!!!\n가상 구매 누적 · 실제 지출 0원\n링크는 이번 추첨 결과. 너는 몇 번 만에 될까? #로또랩`;
+    return `드디어… ${format.format(result.journey.attempts)}번째 10억원 도전!\n지금까지 총 ${currency(result.journey.spent)} 써서 1등 당첨!!!\n가상 구매 누적 · 실제 지출 0원\n${reading}\n링크는 이번 추첨 결과. 너는 몇 번 만에 될까? #로또랩`;
   }
-  return `${budgetLabel(result.games)} 돌리고 ${currency(result.prize)} 건짐.\n내 운은 「${profile.title.replaceAll('\n', ' ')}」\n“${profile.line}”\n${profile.basis}\n너 이거 이길 수 있어? 같은 금액으로 붙어보자. 실제 지출은 0원! #로또랩`;
+  return `${reading}\n너의 운은 몇 %일까? 실제 지출은 0원! #로또랩`;
 }
 
 $('result-share').addEventListener('click', async () => {
@@ -731,7 +736,7 @@ $('result-save').addEventListener('click', async () => {
   const button = $('result-save'); button.disabled = true;
   try {
     await document.fonts.ready;
-    const result = state.result, profile = getProfile(result);
+    const result = state.result, profile = getProfile(result), luck = getLuck(result);
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1440;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas unavailable');
@@ -747,35 +752,50 @@ $('result-save').addEventListener('click', async () => {
     await Promise.all([logo.decode(), sheet.decode()]);
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(56, 45, 267, 76, 12); ctx.fill();
     ctx.drawImage(logo, 74, 62, 232, 48);
-    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = '750 25px Pretendard, sans-serif'; ctx.fillText('나의 로또 운 캐릭터', 1018, 77);
-    ctx.font = '800 25px Manrope, sans-serif'; ctx.fillText(`${profile.code} · ${String(profile.number).padStart(2, '0')} / ${PROFILE_COUNT}`, 1018, 111);
+    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = '750 25px Pretendard, sans-serif'; ctx.fillText('나의 로또 행운은?', 1018, 77);
+    ctx.font = '750 25px Pretendard, sans-serif'; ctx.fillText(luck.scope, 1018, 111);
     const cells = { warm: [0, 0], office: [1, 0], clover: [2, 0], pink: [0, 1], royal: [1, 1] };
     const [column, row] = cells[profile.character];
     const cellWidth = sheet.naturalWidth / 3, cellHeight = sheet.naturalHeight / 2;
     ctx.drawImage(sheet, column * cellWidth, row * cellHeight, cellWidth, cellHeight, 320, 129, 440, 440);
     ctx.fillStyle = ink; ctx.textAlign = 'center';
     const milestone = result.journey?.hit && result.counts[1] > 0;
-    const titles = milestone ? ['드디어…', '1등 당첨!!!'] : profile.title.split('\n');
+    const titles = milestone ? ['드디어…', '1등 당첨!!!'] : [`${luck.percent}의`, luck.label.replace(/^의 /, '')];
     let titleSize = 88;
     for (const title of titles) titleSize = Math.min(titleSize, fit(title, titleSize, 948, 900));
     ctx.font = `900 ${titleSize}px Pretendard, sans-serif`;
     titles.forEach((line, i) => ctx.fillText(line, 540, 644 + i * titleSize * 1.14));
-    const cardLine = milestone ? `${format.format(result.journey.attempts)}번째 10억원 도전에서 만난 1등` : `“${profile.line}”`;
+    const cardLine = milestone ? `${format.format(result.journey.attempts)}번째 도전 · 이번 결과는 ${luck.percent}의 행운` : luck.verdict;
     ctx.fillStyle = '#535b70'; fit(cardLine, 33, 930, 650); ctx.fillText(cardLine, 540, 814);
     ctx.fillStyle = '#ffffffcd'; ctx.beginPath(); ctx.roundRect(56, 866, 968, 248, 24); ctx.fill();
-    ctx.fillStyle = '#626779'; ctx.font = '650 30px Pretendard, sans-serif'; ctx.fillText(milestone ? '지금까지 총' : `${budgetLabel(result.games)} 돌리고`, 540, 927);
-    const cardAmount = milestone ? currency(result.journey.spent) : `${currency(result.prize)} 건짐`;
-    ctx.fillStyle = ink; fit(cardAmount, 72, 898, 900); ctx.fillText(cardAmount, 540, 1016);
-    const cardReaction = milestone ? '써서 1등 당첨!!! · 누적 가상 구매 금액' : profile.reaction;
-    ctx.fillStyle = '#626779'; fit(cardReaction, 29, 896, 650); ctx.fillText(cardReaction, 540, 1072);
-    ctx.fillStyle = ink;
-    const summary = `${milestone ? '이번 도전 · ' : ''}${format.format(result.games)}게임 · ${profile.basis}`;
-    fit(summary, 29, 960, 700); ctx.fillText(summary, 540, 1171);
-    ctx.font = '800 29px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 540, 1230);
+    const wrap = (value, y, maxLines, size = 32) => {
+      let lines;
+      do {
+        ctx.font = `650 ${size}px Pretendard, sans-serif`; lines = [''];
+        for (const word of value.split(/\s+/)) {
+          const candidate = lines.at(-1) ? `${lines.at(-1)} ${word}` : word;
+          if (ctx.measureText(candidate).width > 884 && lines.at(-1)) lines.push(word);
+          else lines[lines.length - 1] = candidate;
+        }
+        if (lines.length > maxLines) size--;
+      } while (lines.length > maxLines && size > 20);
+      lines.forEach((line, index) => ctx.fillText(line.trim(), 540, y + index * (size + 12)));
+    };
+    if (milestone) {
+      ctx.fillStyle = '#626779'; ctx.font = '650 30px Pretendard, sans-serif'; ctx.fillText('지금까지 총', 540, 927);
+      ctx.fillStyle = ink; const cardAmount = currency(result.journey.spent); fit(cardAmount, 72, 898, 900); ctx.fillText(cardAmount, 540, 1016);
+      ctx.fillStyle = '#626779'; ctx.font = '650 29px Pretendard, sans-serif'; ctx.fillText('써서 1등 당첨!!! · 누적 가상 구매 금액', 540, 1072);
+    } else {
+      ctx.fillStyle = '#626779'; ctx.font = '750 30px Pretendard, sans-serif'; ctx.fillText('왜 이런 결과인가요?', 540, 924);
+      ctx.fillStyle = ink; wrap(luck.evidence, 979, 3, 33);
+    }
+    ctx.fillStyle = ink; fit(`${luck.scope} · ${luck.metric}`, 27, 960, 700); ctx.fillText(`${luck.scope} · ${luck.metric}`, 540, 1165);
+    ctx.fillStyle = '#626779'; ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('실제 이용자 순위가 아닌 이론 확률입니다.', 540, 1200);
+    ctx.font = '800 29px Pretendard, sans-serif'; ctx.fillText('실제로 쓴 돈은 0원.', 540, 1242);
     ctx.fillStyle = '#626779'; ctx.font = '500 22px Pretendard, sans-serif'; ctx.fillText('가상 추첨 · 1~3등은 세전 예시 금액 · 재미로 붙인 별명', 540, 1277);
     ctx.fillText('한 게임의 1등 확률 8,145,060분의 1', 540, 1311);
     ctx.fillStyle = ink; ctx.fillRect(0, 1340, 1080, 100);
-    ctx.fillStyle = '#ffe34d'; ctx.textAlign = 'left'; ctx.font = '850 34px Pretendard, sans-serif'; ctx.fillText('너 이거 이길 수 있어?', 57, 1402);
+    ctx.fillStyle = '#ffe34d'; ctx.textAlign = 'left'; ctx.font = '850 34px Pretendard, sans-serif'; ctx.fillText('너의 운은 몇 %일까?', 57, 1402);
     ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.font = '700 24px Manrope, sans-serif'; ctx.fillText('lucianlabs.dev/lotto', 1022, 1402);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('Image export unavailable');

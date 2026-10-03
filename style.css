@@ -1,4 +1,4 @@
-@font-face{font-family:Pretendard;src:url('./assets/lotto-sans.woff2?v=15') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:Pretendard;src:url('./assets/lotto-sans.woff2?v=16') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
 @font-face{font-family:Manrope;src:url('./assets/manrope-bold.ttf') format('truetype');font-style:normal;font-weight:700 900;font-display:swap}
 :root{--ink:#192b49;--muted:#728095;--blue:#1748d5;--line:#e2e6ec;--paper:#f7f8fa;--mono:Manrope,Pretendard,sans-serif;font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--ink);background:var(--paper);font-synthesis:none;line-height:1.55}
 *{box-sizing:border-box}
@@ -610,3 +610,23 @@ body.is-drawing{overflow:hidden}
 .first-prize-focus.is-milestone .first-prize-outcome>span,.first-prize-focus.is-milestone .first-prize-outcome small{font-size:15px}
 .first-prize-focus.is-milestone .first-prize-context{max-width:100%;font-size:10px}
 @media(max-width:360px){.budget-presets{gap:4px}.budget-presets button{font-size:12px}.jackpot-milestone{font-size:21px}.first-prize-focus.is-milestone .jackpot-milestone strong{font-size:25px}.next-budget-title strong{font-size:29px}}
+
+/* A single result reading replaces the separate personality headline and repeated reaction. */
+.luck-card{position:relative;background:var(--type-paper,#fff7d5);border:1px solid #dcd6c6;border-radius:10px;padding:20px;overflow:hidden;color:var(--ink)}
+.luck-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+.luck-scope{font-size:12px;font-weight:700;line-height:1.6;color:#626577}
+.luck-card-top .mascot{width:64px;flex:0 0 64px}
+.luck-lead{font-size:15px;font-weight:650;margin-top:-8px}
+#luck-title{display:flex;flex-direction:column;gap:2px;line-height:1.12;letter-spacing:-1.5px;font-weight:900;margin:3px 0 12px}
+#luck-title strong{font-size:56px;white-space:nowrap;font-family:var(--mono);letter-spacing:-2px}
+#luck-title strong small{font-size:25px;letter-spacing:-1px;margin-left:3px}
+#luck-title>span{font-size:29px;line-height:1.35}
+.luck-card[data-compact="true"] #luck-title strong{font-size:36px;letter-spacing:-1.2px}
+.luck-metric{font-size:11px;color:#626577}
+.luck-verdict{font-size:14px;font-weight:750;line-height:1.65;margin-top:15px;word-break:keep-all}
+.luck-evidence{font-size:13px;line-height:1.75;color:#515a6d;margin-top:11px;padding-top:11px;border-top:1px solid #283b4f22;word-break:keep-all}
+.fortune-details .luck-method-note{font-size:11px;color:#7a8190}
+.luck-type-detail{border-top:1px solid #dfd9cc;margin-top:16px;padding-top:14px}
+.luck-type-detail .luck-type-title{font-weight:800;font-size:17px;white-space:pre-line;color:var(--ink)}
+@media(max-width:680px){.result-layout .type-reading{order:0}.result-layout .receipt-column{order:1}.luck-card{padding:18px}.luck-card-top .mascot{width:60px;flex-basis:60px}#luck-title strong{font-size:54px}#luck-title>span{font-size:27px}.luck-verdict{font-size:13px}.luck-evidence{font-size:12px}}
+@media(max-width:360px){#luck-title strong{font-size:48px}#luck-title strong small{font-size:21px}.luck-card[data-compact="true"] #luck-title strong{font-size:29px}.luck-card-top .mascot{width:54px;flex-basis:54px}}

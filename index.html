@@ -17,10 +17,10 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://lucianlabs.dev/lotto/">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="preload" href="./assets/lotto-sans.woff2?v=15" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./assets/lotto-sans.woff2?v=16" as="font" type="font/woff2" crossorigin><link rel="preload" href="./assets/manrope-bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/lotto-mascots-sheet.png" as="image">
-  <link rel="stylesheet" href="./style.css?v=15">
-  <script type="module" src="./app.js?v=15"></script>
+  <link rel="stylesheet" href="./style.css?v=16">
+  <script type="module" src="./app.js?v=16"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -120,8 +120,12 @@
           <p id="result-detail-caption" class="result-detail-caption sr-only"></p><span id="receipt-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></span>
         </section>
         <div class="type-reading">
-          <article class="type-card" id="type-card" aria-labelledby="type-title"><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span><div><span class="type-eyebrow"><span id="type-tier">이번에 뽑은 내 운</span> <b id="type-code">NORM</b></span><h2 id="type-title"></h2><p id="type-line" class="type-line"></p></div></article>
-          <details class="fortune-details"><summary>내 운 풀이 <span class="details-sign" aria-hidden="true">+</span></summary><p id="type-explanation"></p><p id="type-basis" class="type-basis"></p><p class="journey-note">10억원 도전의 누적 금액은 이 탭에서 완료한 게임만 합산합니다. 새로고침해도 유지되며, 첫 1등 이후 다음 도전은 새 기록으로 시작합니다. 실제 지출은 0원입니다.</p><button id="journey-reset" class="journey-reset" type="button" hidden>누적 도전 기록 초기화</button></details>
+          <article class="luck-card" id="type-card" aria-labelledby="luck-title">
+            <div class="luck-card-top"><p id="luck-scope" class="luck-scope"></p><span class="mascot" id="type-character" role="img" aria-label="내 운 캐릭터"></span></div>
+            <p class="luck-lead">나는</p><h2 id="luck-title"><strong><span id="luck-percent"></span><small>의</small></strong><span id="luck-label"></span></h2>
+            <p id="luck-metric" class="luck-metric"></p><p id="luck-verdict" class="luck-verdict"></p><p id="luck-evidence" class="luck-evidence"></p>
+          </article>
+          <details class="fortune-details"><summary>왜 이 확률인가요? <span class="details-sign" aria-hidden="true">+</span></summary><p id="luck-basis"></p><p id="luck-mode-note"></p><p class="luck-method-note">실제 이용자 순위가 아닌 이론 확률입니다. 누적 도전 금액과 별도로 이번 결과만 계산하며, 다음 추첨의 확률은 달라지지 않아요.</p><div class="luck-type-detail"><span class="type-eyebrow"><span id="type-tier"></span> <b id="type-code"></b></span><p id="type-title" class="luck-type-title"></p><p id="type-line"></p><p id="type-explanation"></p><p id="type-basis" class="type-basis"></p></div><p class="journey-note">10억원 도전의 누적 금액은 이 탭에서 완료한 게임만 합산합니다. 새로고침해도 유지되며, 첫 1등 이후 다음 도전은 새 기록으로 시작합니다. 실제 지출은 0원입니다.</p><button id="journey-reset" class="journey-reset" type="button" hidden>누적 도전 기록 초기화</button></details>
           <section class="friend-challenge" id="friend-challenge" hidden aria-labelledby="challenge-title"><h3 id="challenge-title"></h3><p id="challenge-copy"></p><div id="challenge-scores" class="challenge-scores" hidden><div><span>친구</span><strong id="friend-prize"></strong></div><div><span>나</span><strong id="my-prize"></strong></div></div><button id="challenge-start" class="challenge-start" type="button">같은 금액으로 붙어보기 ↗</button></section>
           <button id="big-budget-draw" class="big-budget-action" type="button">
             <span class="next-budget-copy"><span id="next-budget-kicker" class="next-budget-kicker">이번에는</span><span class="next-budget-title"><strong id="next-budget-amount">1천만원</strong><span>돌려보기</span></span><span id="next-budget-games" class="next-budget-games">10,000게임 · 10회 추첨</span><span class="next-budget-free">실제 지출은 0원</span></span>
